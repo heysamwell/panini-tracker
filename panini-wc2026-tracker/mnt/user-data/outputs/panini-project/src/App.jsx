@@ -954,8 +954,10 @@ export default function PaniniTracker() {
           onSet={setRepeat} onClose={()=>setRepeatModal(null)}/>
       )}
 
+      {/* Header + Tabs sticky together */}
+      <div style={{position:"sticky",top:0,zIndex:20}}>
       {/* Header */}
-      <div style={{background:"linear-gradient(135deg,#0c1430,#142050,#0c2850)",padding:"14px 14px 10px",borderBottom:"2px solid #e8c84a",position:"sticky",top:0,zIndex:10}}>
+      <div style={{background:"linear-gradient(135deg,#0c1430,#142050,#0c2850)",padding:"14px 14px 10px",borderBottom:"2px solid #e8c84a"}}>
         <div style={{maxWidth:520,margin:"0 auto"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
             <div>
@@ -981,15 +983,16 @@ export default function PaniniTracker() {
       </div>
 
       {/* Tabs */}
-      <div style={{display:"flex",background:"#0c0c18",borderBottom:"1px solid #181828",maxWidth:520,margin:"0 auto"}}>
+      <div style={{background:"#0c0c18",borderBottom:"1px solid #181828",display:"flex"}}>
         {TABS.map(t=>(
-          <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"9px 2px",background:"none",border:"none",cursor:"pointer",color:tab===t.k?"#e8c84a":"#404060",fontSize:15,letterSpacing:0.5,textTransform:"uppercase",borderBottom:tab===t.k?"2px solid #e8c84a":"2px solid transparent",transition:"all 0.2s"}}>
-            <div style={{fontSize:16,marginBottom:2}}>{t.icon}</div>{t.label}
+          <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"10px 2px",background:"none",border:"none",cursor:"pointer",color:tab===t.k?"#e8c84a":"#404060",fontSize:9,letterSpacing:0.5,textTransform:"uppercase",borderBottom:tab===t.k?"2px solid #e8c84a":"2px solid transparent",transition:"all 0.2s"}}>
+            <div style={{fontSize:18,marginBottom:2}}>{t.icon}</div>{t.label}
           </button>
         ))}
       </div>
+      </div>{/* end sticky wrapper */}
 
-      <div style={{maxWidth:520,margin:"0 auto",padding:"12px 10px 80px"}}>
+      <div style={{maxWidth:520,margin:"0 auto",padding:"12px 10px 40px"}}>
 
         {/* ══ ÁLBUM ══ */}
         {tab==="album"&&(
