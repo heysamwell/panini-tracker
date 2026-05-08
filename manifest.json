@@ -1,0 +1,18 @@
+{
+  "name": "Panini WC2026 Tracker",
+  "short_name": "Panini 2026",
+  "description": "Tracker de estampas Panini FIFA World Cup 2026",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080810",
+  "theme_color": "#080810",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
