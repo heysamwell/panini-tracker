@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 // Load Inter from Google Fonts
 if (typeof document !== "undefined" && !document.getElementById("inter-font")) {
@@ -1271,6 +1272,7 @@ export default function PaniniTracker() {
         )}
 
       </div>
+      <Analytics />
     </div>
   );
 }
