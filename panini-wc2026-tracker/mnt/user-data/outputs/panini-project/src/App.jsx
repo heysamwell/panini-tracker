@@ -944,7 +944,7 @@ export default function PaniniTracker() {
     finally { setPdfLoading(false); }
   };
 
-  const TABS=[{k:"album",icon:"◉",label:"Álbum"},{k:"repetidas",icon:"◈",label:"Repet."},{k:"faltantes",icon:"○",label:"Faltan"},{k:"cambios",icon:"🔄",label:"Cambios"},{k:"about",icon:"☕",label:"Acerca"}];
+  const TABS=[{k:"album",icon:"◉",label:"Álbum"},{k:"stats",icon:"📊",label:"Stats"},{k:"repetidas",icon:"◈",label:"Repet."},{k:"faltantes",icon:"○",label:"Faltan"},{k:"cambios",icon:"🔄",label:"Cambios"},{k:"about",icon:"☕",label:"Acerca"}];
 
   return (
     <div style={{minHeight:"100vh",background:"#080810",fontFamily:"'Inter', system-ui, sans-serif",color:"#e0d8f0"}}>
@@ -1000,7 +1000,7 @@ export default function PaniniTracker() {
               {["ALL","FWC",...GROUPS.map(g=>g.id)].map(g=>{
                 const col=g==="ALL"||g==="FWC"?"#e8c84a":(GROUP_COLORS[g]||"#e8c84a");
                 return <button key={g} onClick={()=>{setActiveGroup(g);setSearchQ("");}} style={{flexShrink:0,padding:"4px 10px",borderRadius:20,fontSize:16,cursor:"pointer",border:`1px solid ${activeGroup===g?col:"#202030"}`,background:activeGroup===g?`${col}22`:"transparent",color:activeGroup===g?col:"#505068",whiteSpace:"nowrap"}}>
-                  {g==="ALL"?"Todos":g==="FWC"?"🌍 Intro":`Grp ${g}`}
+                  {g==="ALL"?"Todos":g==="FWC"?"🌍 FWC":`Grp ${g}`}
                 </button>;
               })}
             </div>
@@ -1220,7 +1220,137 @@ export default function PaniniTracker() {
           </div>
         )}
 
-        {/* ══ CAMBIOS ══ */}
+        {/* ══ STATS ══ */}
+        {tab==="stats"&&(
+          <div>
+            {/* Hero progress ring area */}
+            <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:20,marginBottom:14,textAlign:"center"}}>
+              <div style={{fontSize:13,color:"#606078",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Progreso total</div>
+              {/* Big circle */}
+              <div style={{position:"relative",width:140,height:140,margin:"0 auto 16px"}}>
+                <svg width="140" height="140" style={{transform:"rotate(-90deg)"}}>
+                  <circle cx="70" cy="70" r="58" fill="none" stroke="#1a1a2a" strokeWidth="12"/>
+                  <circle cx="70" cy="70" r="58" fill="none" stroke="#e8c84a" strokeWidth="12"
+                    strokeDasharray={`${2*Math.PI*58*pct/100} ${2*Math.PI*58}`}
+                    strokeLinecap="round"/>
+                </svg>
+                <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                  <div style={{fontSize:30,fontWeight:"900",color:"#e8c84a",lineHeight:1}}>{pct}%</div>
+                  <div style={{fontSize:11,color:"#606078",marginTop:2}}>completado</div>
+                </div>
+              </div>
+              {/* 3 stats */}
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8}}>
+                {[
+                  [owned.size, "Tengo", "#70c070"],
+                  [missing.length, "Faltan", "#c05050"],
+                  [repeatList.length, "Repetidas", "#a080e0"],
+                ].map(([val,label,color])=>(
+                  <div key={label} style={{background:"#111120",borderRadius:10,padding:"10px 4px"}}>
+                    <div style={{fontSize:22,fontWeight:"900",color}}>{val}</div>
+                    <div style={{fontSize:11,color:"#404058",marginTop:2}}>{label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Progress by group */}
+            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
+              <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
+                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por grupo</div>
+              </div>
+              <div style={{padding:"8px 16px 12px"}}>
+                {GROUPS.map(g=>{
+                  const teamSecs = ALBUM.filter(s=>s.group===g.id);
+                  const have = teamSecs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
+                  const total = teamSecs.reduce((a,s)=>a+s.stickers.length,0);
+                  const gPct = Math.round((have/total)*100);
+                  const col = GROUP_COLORS[g.id];
+                  return (
+                    <div key={g.id} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:4,background:col,flexShrink:0}}/>
+                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>Grupo {g.id}</span>
+                          <span style={{fontSize:11,color:"#404058"}}>
+                            {g.teams.map(t=>t.flag).join(" ")}
+                          </span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:12,color:col,fontWeight:"700"}}>{gPct}%</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${gPct}%`,background:col,borderRadius:3,transition:"width 0.5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Top/bottom groups */}
+            {(() => {
+              const groupStats = GROUPS.map(g=>{
+                const teamSecs = ALBUM.filter(s=>s.group===g.id);
+                const have = teamSecs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
+                const total = teamSecs.reduce((a,s)=>a+s.stickers.length,0);
+                return { id:g.id, pct:Math.round((have/total)*100), teams:g.teams, col:GROUP_COLORS[g.id] };
+              }).sort((a,b)=>b.pct-a.pct);
+              const top = groupStats.slice(0,3);
+              const bot = groupStats.slice(-3).reverse();
+              return (
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+                  <div style={{background:"#090f0d",border:"1px solid #1a3a28",borderRadius:12,padding:12}}>
+                    <div style={{fontSize:11,color:"#50d0a0",fontWeight:"700",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>🏆 Más avanzados</div>
+                    {top.map(g=>(
+                      <div key={g.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                        <span style={{fontSize:12,color:"#a0c0a8"}}>Grupo {g.id} {g.teams.map(t=>t.flag).join("")}</span>
+                        <span style={{fontSize:12,fontWeight:"700",color:g.col}}>{g.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{background:"#0f090d",border:"1px solid #3a1a28",borderRadius:12,padding:12}}>
+                    <div style={{fontSize:11,color:"#e05050",fontWeight:"700",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>📌 Más faltante</div>
+                    {bot.map(g=>(
+                      <div key={g.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+                        <span style={{fontSize:12,color:"#c0a0a8"}}>Grupo {g.id} {g.teams.map(t=>t.flag).join("")}</span>
+                        <span style={{fontSize:12,fontWeight:"700",color:g.col}}>{g.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Share card */}
+            <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:14,padding:16,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Compartir mi progreso</div>
+              <div style={{fontSize:12,color:"#505068",marginBottom:12}}>Copia este texto para postear en WhatsApp o Instagram</div>
+              <div style={{background:"#080810",border:"1px solid #1a1a2a",borderRadius:10,padding:12,marginBottom:10,fontSize:12,color:"#a0a0c0",lineHeight:1.7}}>
+                ⚽ Mi progreso Panini WC2026{"\n"}
+                📊 {pct}% completado ({owned.size}/{TOTAL}){"\n"}
+                ✅ Tengo: {owned.size} | ❌ Faltan: {missing.length} | 🔄 Repetidas: {repeatList.length}{"\n"}
+                🏆 Top grupo: {(()=>{const g=GROUPS.map(g=>{const s=ALBUM.filter(s=>s.group===g.id);const h=s.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);const t=s.reduce((a,s)=>a+s.stickers.length,0);return{id:g.id,pct:Math.round((h/t)*100)};}).sort((a,b)=>b.pct-a.pct)[0];return g?`Grupo ${g.id} (${g.pct}%)`:"—";})()}{"\n"}
+                📱 panini-tracker-flame.vercel.app
+              </div>
+              <button onClick={()=>{
+                const top = GROUPS.map(g=>{const s=ALBUM.filter(s=>s.group===g.id);const h=s.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);const t=s.reduce((a,s)=>a+s.stickers.length,0);return{id:g.id,pct:Math.round((h/t)*100)};}).sort((a,b)=>b.pct-a.pct)[0];
+                navigator.clipboard?.writeText(
+                  `⚽ Mi progreso Panini WC2026\n📊 ${pct}% completado (${owned.size}/${TOTAL})\n✅ Tengo: ${owned.size} | ❌ Faltan: ${missing.length} | 🔄 Repetidas: ${repeatList.length}\n🏆 Top grupo: Grupo ${top?.id} (${top?.pct}%)\n📱 panini-tracker-flame.vercel.app`
+                );
+              }}
+                style={{width:"100%",padding:"11px 0",background:"linear-gradient(135deg,#1a1a3a,#141428)",
+                  border:"1px solid #4040a0",borderRadius:10,color:"#8090d0",cursor:"pointer",
+                  fontSize:13,fontFamily:"inherit",fontWeight:"600"}}>
+                ⎘ Copiar para compartir
+              </button>
+            </div>
+          </div>
+        )}
+
+
         {tab==="cambios"&&(
           <div>
             {/* Hero */}
