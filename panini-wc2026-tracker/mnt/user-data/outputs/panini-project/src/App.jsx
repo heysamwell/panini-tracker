@@ -981,11 +981,24 @@ const decodeMarketLink = (code) => {
 };
 
 // ── Friend Link Input ─────────────────────────────────────────────────────────
-function FriendLinkInput({ myRepeats, myMissing }) {
+function FriendLinkInput({ myRepeats, myMissing, preloaded }) {
   const [input, setInput] = useState("");
   const [result, setResult] = useState(null);
   const [err, setErr] = useState("");
   const [copied, setCopied] = useState(false);
+
+  // Auto-compare if friend data came from URL
+  useEffect(()=>{
+    if (preloaded) runCompare(preloaded);
+  }, [preloaded]);
+
+  const runCompare = (friend) => {
+    const myMissingSet = new Set(myMissing);
+    const friendMissingSet = new Set(friend.missing);
+    const iGiveThem = myRepeats.filter(r=>friendMissingSet.has(r.id));
+    const theyGiveMe = friend.repeats.filter(r=>myMissingSet.has(r.id));
+    setResult({ iGiveThem, theyGiveMe });
+  };
 
   const compare = () => {
     setErr(""); setResult(null);
@@ -993,11 +1006,7 @@ function FriendLinkInput({ myRepeats, myMissing }) {
     try { const url = new URL(code); code = url.searchParams.get("mercado") || code; } catch {}
     const friend = decodeMarketLink(code);
     if (!friend) { setErr("Link inválido. Pide a tu amigo que copie su link de nuevo."); return; }
-    const myMissingSet = new Set(myMissing);
-    const friendMissingSet = new Set(friend.missing);
-    const iGiveThem = myRepeats.filter(r=>friendMissingSet.has(r.id));
-    const theyGiveMe = friend.repeats.filter(r=>myMissingSet.has(r.id));
-    setResult({ iGiveThem, theyGiveMe });
+    runCompare(friend);
   };
 
   return (
@@ -1193,6 +1202,22 @@ export default function PaniniTracker() {
   const [repeated, setRepeated] = useState(()=>loadData().repeated);
   const [tab, setTab] = useState("album");
   const [showTrade, setShowTrade] = useState(false);
+  const [friendData, setFriendData] = useState(null); // preloaded from URL
+
+  // On mount: check if URL has ?mercado= param
+  useEffect(()=>{
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("mercado");
+    if (code) {
+      const decoded = decodeMarketLink(code);
+      if (decoded) {
+        setFriendData(decoded);
+        setTab("cambios");
+        // Clean URL without reloading
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    }
+  }, []);
   const [repeatModal, setRepeatModal] = useState(null);
   const [savedPulse, setSavedPulse] = useState(false);
   const [shareMsg, setShareMsg] = useState(false);
@@ -1805,10 +1830,15 @@ export default function PaniniTracker() {
             {/* ── VER LINK DE AMIGO ── */}
             <div style={{background:"#0e0e1a",border:"1px solid #2a2a40",borderRadius:14,padding:18,marginBottom:12}}>
               <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>👀 Ver perfil de un amigo</div>
+              {friendData && (
+                <div style={{background:"#0a2a1a",border:"1px solid #2a6040",borderRadius:8,padding:"8px 12px",marginBottom:10,fontSize:12,color:"#50d0a0"}}>
+                  ✓ Datos del QR detectados — comparando automáticamente con tu álbum
+                </div>
+              )}
               <div style={{fontSize:13,color:"#506070",lineHeight:1.6,marginBottom:12}}>
                 Pega el link que te mandó tu amigo para ver sus repetidas y faltantes, y compara con las tuyas.
               </div>
-              <FriendLinkInput myRepeats={repeatList} myMissing={missing} onConfirm={confirmTrade}/>
+              <FriendLinkInput myRepeats={repeatList} myMissing={missing} onConfirm={confirmTrade} preloaded={friendData}/>
             </div>
 
             {/* ── COMPARADOR CLÁSICO ── */}
