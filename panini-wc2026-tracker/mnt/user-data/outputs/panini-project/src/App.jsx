@@ -299,25 +299,40 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
   size = size || "md";
   const has = owned.has(id);
   const rep = repeated[id] || 0;
+  const [pressing, setPressing] = useState(false);
+  const [justMarked, setJustMarked] = useState(false);
   const minH = size==="lg" ? 90 : size==="md" ? 72 : 56;
   const numFs = size==="lg" ? 18 : size==="md" ? 15 : 12;
   const bg   = has ? (rep>0 ? "#2a1a6e" : color+"22") : "#0d0d1a";
   const bCol = has ? (rep>0 ? "#8060e0" : color)       : "#252535";
   const textC= has ? (rep>0 ? "#c0a0ff" : color)       : "#35354a";
 
+  const handleToggle = () => {
+    if (!has) { setJustMarked(true); setTimeout(()=>setJustMarked(false), 400); }
+    onToggle(id);
+  };
+
   return (
     <div style={{width:"100%",minHeight:minH,background:bg,border:"1.5px solid "+bCol,borderRadius:8,
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      transition:"all 0.15s",position:"relative",fontFamily:"Inter, system-ui, sans-serif",
-      overflow:"hidden",userSelect:"none",WebkitUserSelect:"none"}}>
+      transition:"background 0.2s, border-color 0.2s",position:"relative",
+      fontFamily:BODY,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",
+      transform: pressing ? "scale(0.94)" : justMarked ? "scale(1.06)" : "scale(1)",
+      boxShadow: justMarked ? `0 0 12px ${color}66` : "none",
+      transition:"transform 0.12s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s"}}>
 
       {/* Main tap area */}
-      <div onClick={()=>onToggle(id)}
+      <div onClick={handleToggle}
+        onPointerDown={()=>setPressing(true)}
+        onPointerUp={()=>setPressing(false)}
+        onPointerLeave={()=>setPressing(false)}
         style={{flex:1,width:"100%",display:"flex",flexDirection:"column",alignItems:"center",
           justifyContent:"center",gap:2,cursor:"pointer",
           padding: has ? "6px 2px 20px" : "6px 2px"}}>
-        <div style={{fontSize:numFs,fontWeight:"900",color:textC,lineHeight:1}}>{num}</div>
-        <div style={{fontSize:14,color:has ? color+"bb" : "#252535",letterSpacing:0.5,fontWeight:"bold"}}>{id}</div>
+        <div style={{fontSize:numFs,fontWeight:"900",color:textC,lineHeight:1,
+          transition:"color 0.2s"}}>{num}</div>
+        <div style={{fontSize:14,color:has ? color+"bb" : "#252535",letterSpacing:0.5,fontWeight:"bold",
+          transition:"color 0.2s"}}>{id}</div>
         {rep>0 && (
           <div style={{background:"#1a0a40",border:"1px solid #6040b0",borderRadius:4,
             padding:"1px 5px",fontSize:16,color:"#c0a0ff",fontWeight:"bold",marginTop:1}}>
@@ -326,7 +341,7 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
         )}
       </div>
 
-      {/* Rep strip — only when owned, tap to open counter */}
+      {/* Rep strip */}
       {has && (
         <div onClick={e=>{e.stopPropagation();onOpenRepeat(id);}}
           style={{position:"absolute",bottom:0,left:0,right:0,
@@ -334,7 +349,7 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
             borderTop:"1px solid "+(rep>0 ? "#6040b0" : color+"33"),
             padding:"3px 0",textAlign:"center",cursor:"pointer",
             fontSize:14,color:rep>0 ? "#c0a0ff" : color+"99",
-            fontWeight:"bold",letterSpacing:0.3}}>
+            fontWeight:"bold",letterSpacing:0.3,transition:"background 0.2s"}}>
           {rep>0 ? ("\u25c8 "+rep+" extra") : "+ repetida"}
         </div>
       )}
@@ -412,7 +427,7 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat 
       </div>
       <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:"#e8302a",transition:"width 0.3s"}}/></div>
 
-      {open && <>
+      {open && <div className="accordion-content">
       {/* Page 1: CC1-CC6, 2 rows of 3 */}
       <div style={{padding:"10px 10px 6px",borderBottom:"1px solid #e8302a18"}}>
         <div style={{fontSize:11,color:"#303048",letterSpacing:2,marginBottom:8,textTransform:"uppercase",fontWeight:"600"}}>Página 1 · CC1–CC6</div>
@@ -457,7 +472,7 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat 
         <button onClick={()=>stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id))}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✗ Limpiar</button>
       </div>
-      </>}
+      </div>}
     </div>
   );
 }
@@ -499,7 +514,7 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
       </div>
       <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:color,transition:"width 0.3s"}}/></div>
 
-      {open && <>
+      {open && <div className="accordion-content">
       {/* ── PAGE 1 ── */}
       <div style={{padding:"10px 10px 6px",borderBottom:`1px solid ${color}18`}}>
         <div style={{fontSize:16,color:"#303048",letterSpacing:2,marginBottom:5}}>PÁG 1 · {code}</div>
@@ -604,7 +619,7 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
         <button onClick={()=>stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id))}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:15,fontFamily:"inherit"}}>✗ Limpiar</button>
       </div>
-      </>}
+      </div>}
     </div>
   );
 }
@@ -1004,7 +1019,17 @@ export default function PaniniTracker() {
   const TABS=[{k:"album",icon:"◉",label:"Álbum"},{k:"stats",icon:"📊",label:"Stats"},{k:"repetidas",icon:"◈",label:"Repet."},{k:"faltantes",icon:"○",label:"Faltan"},{k:"cambios",icon:"🔄",label:"Cambios"},{k:"about",icon:"☕",label:"Acerca"}];
 
   return (
-    <div style={{minHeight:"100vh",background:"#080810",fontFamily:"'Inter', system-ui, sans-serif",color:"#e0d8f0"}}>
+    <div style={{minHeight:"100vh",background:"#080810",fontFamily:BODY,color:"#e0d8f0"}}>
+      <style>{`
+        @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
+        @keyframes tabSlide  { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
+        .accordion-content { animation: slideDown 0.2s ease; }
+        .tab-content       { animation: tabSlide 0.18s ease; }
+        .sticker-pop       { animation: pop 0.3s ease; }
+        @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 70%{transform:scale(0.96)} 100%{transform:scale(1)} }
+        button:active { opacity: 0.85; }
+      `}</style>
       {showTrade&&<TradeModal myCode={myCode} onClose={()=>setShowTrade(false)} onConfirm={confirmTrade}/>}
       {repeatModal&&(
         <RepeatModal id={repeatModal.id} count={repeated[repeatModal.id]||0} color={repeatModal.color}
@@ -1053,7 +1078,7 @@ export default function PaniniTracker() {
 
         {/* ══ ÁLBUM ══ */}
         {tab==="album"&&(
-          <div>
+          <div className="tab-content">
             {/* Expand/collapse all */}
             <div style={{display:"flex",gap:6,marginBottom:10}}>
               <button onClick={()=>setExpandAll(true)}
@@ -1170,7 +1195,7 @@ export default function PaniniTracker() {
 
         {/* ══ REPETIDAS ══ */}
         {tab==="repetidas"&&(
-          <div>
+          <div className="tab-content">
             {/* Stats */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
               <div style={{background:"#0e0e1a",border:"1px solid #3a2a6a",borderRadius:10,padding:12,textAlign:"center"}}>
@@ -1240,7 +1265,7 @@ export default function PaniniTracker() {
 
         {/* ══ FALTAN ══ */}
         {tab==="faltantes"&&(
-          <div>
+          <div className="tab-content">
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
               <div><div style={{fontSize:22,fontWeight:"bold"}}>{missing.length}</div><div style={{fontSize:15,color:"#404050"}}>figuritas faltantes</div></div>
               <div style={{display:"flex",gap:6}}>
@@ -1285,7 +1310,7 @@ export default function PaniniTracker() {
 
         {/* ══ STATS ══ */}
         {tab==="stats"&&(
-          <div>
+          <div className="tab-content">
             {/* Hero progress ring area */}
             <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:20,marginBottom:14,textAlign:"center"}}>
               <div style={{fontSize:13,color:"#606078",letterSpacing:2,textTransform:"uppercase",marginBottom:8}}>Progreso total</div>
@@ -1477,7 +1502,7 @@ export default function PaniniTracker() {
 
 
         {tab==="cambios"&&(
-          <div>
+          <div className="tab-content">
             {/* Hero */}
             <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:20,marginBottom:14,textAlign:"center"}}>
               <div style={{fontSize:42,marginBottom:8}}>🔄</div>
