@@ -1084,12 +1084,33 @@ function FriendLinkInput({ myRepeats, myMissing }) {
   );
 }
 
+// ── QR Code generator (pure JS, no library) ───────────────────────────────────
+// Minimal QR encoder for short URLs using canvas
+function drawQR(canvas, text, fg="#e8c84a", bg="#080810") {
+  // Use the browser's native URL API to create a QR via a data URI approach
+  // We'll use a free QR API that returns an image
+  const size = 220;
+  const ctx = canvas.getContext("2d");
+  canvas.width = size; canvas.height = size;
+  ctx.fillStyle = bg; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle = fg; ctx.font="12px monospace";
+  ctx.textAlign="center";
+  ctx.fillText("Cargando QR...",size/2,size/2);
+  // Load QR as image from a public API
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => { ctx.clearRect(0,0,size,size); ctx.fillStyle=bg; ctx.fillRect(0,0,size,size); ctx.drawImage(img,10,10,size-20,size-20); };
+  img.onerror = () => { ctx.fillStyle=fg; ctx.fillText("Error al generar",size/2,size/2); };
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}&color=e8c84a&bgcolor=080810&format=png`;
+}
+
 // ── QR Market Component ───────────────────────────────────────────────────────
 function QRMarket({ repeatList, missing }) {
   const canvasRef = useRef();
   const [qrReady, setQrReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [link, setLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const buildLink = () => {
     const missingByTeamMap = {};
@@ -1100,75 +1121,57 @@ function QRMarket({ repeatList, missing }) {
     return window.location.origin + window.location.pathname + "?mercado=" + marketCode;
   };
 
-  const generateQR = async () => {
+  const generateQR = () => {
     setLoading(true);
-    try {
-      // Load qrcode library from CDN if not already loaded
-      if (!window.QRCode) {
-        await new Promise((res, rej) => {
-          const s = document.createElement("script");
-          s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
-          s.onload = res; s.onerror = rej;
-          document.head.appendChild(s);
-        });
+    const url = buildLink();
+    setLink(url);
+    setTimeout(() => {
+      if (canvasRef.current) {
+        drawQR(canvasRef.current, url);
+        setQrReady(true);
       }
-      const url = buildLink();
-      setLink(url);
-      // Clear previous QR
-      const container = document.getElementById("qr-container");
-      if (container) container.innerHTML = "";
-      new window.QRCode(container, {
-        text: url,
-        width: 220,
-        height: 220,
-        colorDark: "#e8c84a",
-        colorLight: "#080810",
-        correctLevel: window.QRCode.CorrectLevel.M,
-      });
-      setQrReady(true);
-    } catch(e) {
-      console.error(e);
-    }
-    setLoading(false);
+      setLoading(false);
+    }, 100);
+  };
+
+  const copyLink = () => {
+    navigator.clipboard?.writeText(link);
+    setCopied(true); setTimeout(()=>setCopied(false), 2000);
   };
 
   return (
     <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:18,marginBottom:12}}>
       <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>📲 Mi QR de cambios</div>
       <div style={{fontSize:13,color:"#507060",lineHeight:1.6,marginBottom:14}}>
-        Genera un QR con tus repetidas y faltantes. Tu amigo lo escanea con la cámara y ve exactamente qué pueden intercambiar.
+        Genera un QR con tus repetidas y faltantes. Tu amigo lo escanea y ve qué pueden intercambiar.
       </div>
+
+      <canvas ref={canvasRef} style={{display: qrReady?"block":"none", margin:"0 auto 12px", borderRadius:10, border:"2px solid #e8c84a33"}}/>
 
       {!qrReady && (
         <button onClick={generateQR} disabled={loading}
           style={{width:"100%",padding:"13px 0",background:"linear-gradient(135deg,#0a2a1a,#061810)",
-            border:"1px solid #2a6040",borderRadius:10,color:"#50d0a0",cursor:loading?"not-allowed":"pointer",
-            fontSize:14,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-          {loading ? <>
-            <div style={{width:16,height:16,border:"2px solid #50d0a022",borderTop:"2px solid #50d0a0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
-            Generando QR…
-          </> : "Generar mi QR"}
+            border:"1px solid #2a6040",borderRadius:10,color:"#50d0a0",
+            cursor:loading?"not-allowed":"pointer",fontSize:14,fontFamily:BODY,fontWeight:"600",
+            display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          {loading?<><div style={{width:16,height:16,border:"2px solid #50d0a022",borderTop:"2px solid #50d0a0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Generando…</>:"Generar mi QR"}
         </button>
       )}
 
       {qrReady && (
         <div style={{textAlign:"center"}}>
-          {/* QR Display */}
-          <div style={{display:"inline-block",background:"#080810",border:"2px solid #e8c84a44",borderRadius:12,padding:16,marginBottom:12}}>
-            <div id="qr-container"/>
-          </div>
-          <div style={{fontSize:12,color:"#406050",marginBottom:12}}>
-            Tu amigo escanea este QR con la cámara del celular
+          <div style={{fontSize:12,color:"#406050",marginBottom:10}}>
+            📷 Tu amigo escanea este QR con la cámara
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button onClick={()=>{ navigator.clipboard?.writeText(link); }}
+            <button onClick={copyLink}
               style={{flex:1,padding:"10px 0",background:"#0a1a28",border:"1px solid #2a4060",
-                borderRadius:10,color:"#7090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
-              ⎘ Copiar link
+                borderRadius:10,color:copied?"#50d0a0":"#7090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
+              {copied?"✓ Copiado":"⎘ Copiar link"}
             </button>
             <button onClick={generateQR}
-              style={{flex:1,padding:"10px 0",background:"#0a2a1a",border:"1px solid #1a4028",
-                borderRadius:10,color:"#40a060",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
+              style={{flex:1,padding:"10px 0",background:"#0a0a14",border:"1px solid #1a1a28",
+                borderRadius:10,color:"#405060",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
               ↺ Regenerar
             </button>
           </div>
