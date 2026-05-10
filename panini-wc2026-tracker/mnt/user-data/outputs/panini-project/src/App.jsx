@@ -339,11 +339,45 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
   );
 }
 
+// ── FWC Spread ────────────────────────────────────────────────────────────────
+function FWCSpread({ section, owned, repeated, have, pct, onToggle, onOpenRepeat }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{background:"#0e0e1a",border:"2px solid #e8c84a33",borderRadius:14,overflow:"hidden",marginBottom:8}}>
+      <div onClick={()=>setOpen(o=>!o)}
+        style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:10,background:"#e8c84a08",cursor:"pointer",userSelect:"none"}}>
+        <div style={{fontSize:22}}>🌍</div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:16,fontWeight:"bold"}}>FWC</div>
+          <div style={{fontSize:12,color:"#e8c84a88"}}>FWC0 – FWC19</div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:17,fontWeight:"bold",color:"#e8c84a"}}>{pct}%</div>
+            <div style={{fontSize:12,color:"#505068"}}>{have}/20</div>
+          </div>
+          <div style={{fontSize:16,color:"#e8c84a88",transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
+        </div>
+      </div>
+      <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:"#e8c84a",transition:"width 0.3s"}}/></div>
+      {open && (
+        <div style={{padding:"10px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
+          {section.stickers.map(st=>(
+            <StickerBox key={st.id} id={st.id} num={st.num} color="#e8c84a" size="md"
+              owned={owned} repeated={repeated} onToggle={onToggle} onOpenRepeat={onOpenRepeat}/>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Coca-Cola Spread ──────────────────────────────────────────────────────────
 // Page 1: 6 stickers (CC1-CC6) in 2 rows of 3
 // Page 2: row of 3 (CC7-CC9) + row of 3 (CC10-CC12) + row of 2 (CC13-CC14) + Coca-Cola logo tile
 function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
   const { color, stickers } = section;
+  const [open, setOpen] = useState(false);
   const have = stickers.filter(s=>owned.has(s.id)).length;
   const pct  = Math.round((have/14)*100);
   const s = n => stickers[n-1];
@@ -353,11 +387,11 @@ function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
   );
 
   return (
-    <div style={{background:"#0e0e1a",border:"2px solid #e8302a44",borderRadius:14,overflow:"hidden",marginBottom:16}}>
+    <div style={{background:"#0e0e1a",border:"2px solid #e8302a44",borderRadius:14,overflow:"hidden",marginBottom:8}}>
       {/* Header */}
-      <div style={{background:"linear-gradient(135deg,#e8302a22,#e8302a08)",borderBottom:"1px solid #e8302a33",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div onClick={()=>setOpen(o=>!o)} style={{background:"linear-gradient(135deg,#e8302a22,#e8302a08)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontSize:24}}>🥤</div>
+          <div style={{fontSize:22}}>🥤</div>
           <div>
             <div style={{fontSize:14,fontWeight:"bold",letterSpacing:-0.3}}>Coca-Cola</div>
             <div style={{fontSize:12,color:"#e8302a99",letterSpacing:1,textTransform:"uppercase"}}>Sección especial · CC</div>
@@ -367,9 +401,11 @@ function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
           <div style={{fontSize:18,fontWeight:"bold",color:"#e8302a"}}>{pct}%</div>
           <div style={{fontSize:12,color:"#505068"}}>{have}/14</div>
         </div>
+        <div style={{fontSize:16,color:"#e8302a88",transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
       </div>
       <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:"#e8302a",transition:"width 0.3s"}}/></div>
 
+      {open && <>
       {/* Page 1: CC1-CC6, 2 rows of 3 */}
       <div style={{padding:"10px 10px 6px",borderBottom:"1px solid #e8302a18"}}>
         <div style={{fontSize:11,color:"#303048",letterSpacing:2,marginBottom:8,textTransform:"uppercase",fontWeight:"600"}}>Página 1 · CC1–CC6</div>
@@ -414,6 +450,7 @@ function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
         <button onClick={()=>stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id))}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✗ Limpiar</button>
       </div>
+      </>}
     </div>
   );
 }
@@ -421,6 +458,7 @@ function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
 // ── Team Spread ───────────────────────────────────────────────────────────────
 function TeamSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
   const { key:code, name, flag, group, color, stickers } = section;
+  const [open, setOpen] = useState(false);
   const have = stickers.filter(s=>owned.has(s.id)).length;
   const pct  = Math.round((have/20)*100);
   const s = n => stickers[n-1];
@@ -430,22 +468,29 @@ function TeamSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
   );
 
   return (
-    <div style={{background:"#0e0e1a",border:`2px solid ${color}44`,borderRadius:14,overflow:"hidden",marginBottom:16}}>
-      <div style={{background:`linear-gradient(135deg,${color}22,${color}08)`,borderBottom:`1px solid ${color}33`,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+    <div style={{background:"#0e0e1a",border:`2px solid ${color}44`,borderRadius:14,overflow:"hidden",marginBottom:8}}>
+      {/* Header — tap to toggle */}
+      <div onClick={()=>setOpen(o=>!o)}
+        style={{background:`linear-gradient(135deg,${color}22,${color}08)`,
+          padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{fontSize:24}}>{flag}</div>
+          <div style={{fontSize:22}}>{flag}</div>
           <div>
-            <div style={{fontSize:16,fontWeight:"bold",letterSpacing:-0.3}}>{name}</div>
-            <div style={{fontSize:15,color:`${color}bb`,letterSpacing:2,textTransform:"uppercase"}}>Grupo {group} · {code}</div>
+            <div style={{fontSize:15,fontWeight:"bold",letterSpacing:-0.3}}>{name}</div>
+            <div style={{fontSize:12,color:`${color}bb`,letterSpacing:1,textTransform:"uppercase"}}>Grupo {group} · {code}</div>
           </div>
         </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:18,fontWeight:"bold",color}}>{pct}%</div>
-          <div style={{fontSize:15,color:"#505068"}}>{have}/20</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:17,fontWeight:"bold",color}}>{pct}%</div>
+            <div style={{fontSize:12,color:"#505068"}}>{have}/20</div>
+          </div>
+          <div style={{fontSize:16,color:`${color}88`,transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
         </div>
       </div>
       <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:color,transition:"width 0.3s"}}/></div>
 
+      {open && <>
       {/* ── PAGE 1 ── */}
       <div style={{padding:"10px 10px 6px",borderBottom:`1px solid ${color}18`}}>
         <div style={{fontSize:16,color:"#303048",letterSpacing:2,marginBottom:5}}>PÁG 1 · {code}</div>
@@ -550,6 +595,7 @@ function TeamSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
         <button onClick={()=>stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id))}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:15,fontFamily:"inherit"}}>✗ Limpiar</button>
       </div>
+      </>}
     </div>
   );
 }
@@ -1009,22 +1055,14 @@ export default function PaniniTracker() {
             </div>
 
             {/* FWC */}
-            {visibleSections.filter(s=>s.key==="FWC").map(s=>(
-              <div key="FWC" style={{background:"#0e0e1a",border:"2px solid #e8c84a33",borderRadius:14,overflow:"hidden",marginBottom:16}}>
-                <div style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #e8c84a22",background:"#e8c84a08"}}>
-                  <div style={{fontSize:24}}>🌍</div>
-                  <div style={{flex:1}}><div style={{fontSize:16,fontWeight:"bold"}}>FWC</div><div style={{fontSize:15,color:"#e8c84a88"}}>FWC0 – FWC19</div></div>
-                  <div style={{fontSize:15,color:"#e8c84a"}}>{s.stickers.filter(st=>owned.has(st.id)).length}/20</div>
-                </div>
-                <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${Math.round(s.stickers.filter(st=>owned.has(st.id)).length/20*100)}%`,background:"#e8c84a",transition:"width 0.3s"}}/></div>
-                <div style={{padding:"10px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-                  {s.stickers.map(st=>(
-                    <StickerBox key={st.id} id={st.id} num={st.num} color="#e8c84a" size="md"
-                      owned={owned} repeated={repeated} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
-                  ))}
-                </div>
-              </div>
-            ))}
+            {visibleSections.filter(s=>s.key==="FWC").map(s=>{
+              const fwcHave = s.stickers.filter(st=>owned.has(st.id)).length;
+              const fwcPct = Math.round((fwcHave/20)*100);
+              return (
+                <FWCSpread key="FWC" section={s} owned={owned} repeated={repeated}
+                  have={fwcHave} pct={fwcPct} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
+              );
+            })}
             {visibleSections.filter(s=>s.key!=="FWC").map(s=>(
               s.special==="cocacola"
                 ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
