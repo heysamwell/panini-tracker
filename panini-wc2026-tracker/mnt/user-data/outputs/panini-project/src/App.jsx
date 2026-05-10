@@ -404,7 +404,7 @@ function FWCSpread({ section, owned, repeated, have, pct, expandAll, onToggle, o
 // ── Coca-Cola Spread ──────────────────────────────────────────────────────────
 // Page 1: 6 stickers (CC1-CC6) in 2 rows of 3
 // Page 2: row of 3 (CC7-CC9) + row of 3 (CC10-CC12) + row of 2 (CC13-CC14) + Coca-Cola logo tile
-function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat }) {
+function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats }) {
   const { color, stickers } = section;
   const [open, setOpen] = useState(false);
   useEffect(()=>setOpen(expandAll),[expandAll]);
@@ -479,7 +479,10 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat 
       <div style={{borderTop:"1px solid #e8302a18",padding:"6px 10px",display:"flex",gap:6,justifyContent:"flex-end"}}>
         <button onClick={()=>stickers.forEach(st=>{ if(!owned.has(st.id)) onToggle(st.id); })}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #e8302a44",borderRadius:6,color:"#e8302acc",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✓ Todos</button>
-        <button onClick={()=>stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id))}
+        <button onClick={()=>{
+          stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id));
+          onClearRepeats(stickers.map(st=>st.id));
+        }}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>✗ Limpiar</button>
       </div>
       </div>}
@@ -488,7 +491,7 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat 
 }
 
 // ── Team Spread ───────────────────────────────────────────────────────────────
-function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat }) {
+function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats }) {
   const { key:code, name, flag, group, color, stickers } = section;
   const [open, setOpen] = useState(false);
   useEffect(()=>setOpen(expandAll),[expandAll]);
@@ -626,7 +629,10 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
       <div style={{borderTop:`1px solid ${color}18`,padding:"6px 10px",display:"flex",gap:6,justifyContent:"flex-end"}}>
         <button onClick={()=>stickers.forEach(st=>{ if(!owned.has(st.id)) onToggle(st.id); })}
           style={{padding:"4px 10px",background:"#0e0e1a",border:`1px solid ${color}44`,borderRadius:6,color:`${color}cc`,cursor:"pointer",fontSize:15,fontFamily:"inherit"}}>✓ Todos</button>
-        <button onClick={()=>stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id))}
+        <button onClick={()=>{
+          stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id));
+          onClearRepeats(stickers.map(st=>st.id));
+        }}
           style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:15,fontFamily:"inherit"}}>✗ Limpiar</button>
       </div>
       </div>}
@@ -1253,6 +1259,14 @@ export default function PaniniTracker() {
     });
   }, []);
 
+  const clearRepeats = useCallback((ids) => {
+    setRepeated(p => {
+      const nx = {...p};
+      ids.forEach(id => delete nx[id]);
+      return nx;
+    });
+  }, []);
+
   const applyScan = (result, action) => {
     setOwned(p=>{ const n=new Set(p); if(action==="found"||action==="both") result.found.forEach(id=>n.add(id)); if(action==="empty"||action==="both") result.empty.forEach(id=>n.delete(id)); return n; });
   };
@@ -1385,8 +1399,8 @@ export default function PaniniTracker() {
             })}
             {visibleSections.filter(s=>s.key!=="FWC").map(s=>(
               s.special==="cocacola"
-                ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
-                : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
+                ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats}/>
+                : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats}/>
             ))}
             {visibleSections.length===0&&<div style={{textAlign:"center",padding:40,color:"#303040",fontSize:12}}>Sin resultados</div>}
             <div style={{display:"flex",gap:12,justifyContent:"center",paddingTop:10,borderTop:"1px solid #141420"}}>
