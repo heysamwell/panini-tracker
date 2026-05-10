@@ -1350,6 +1350,68 @@ export default function PaniniTracker() {
                 ⎘ Copiar para compartir
               </button>
             </div>
+
+            {/* Export / Import */}
+            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Mis datos</div>
+              <div style={{fontSize:12,color:"#505068",marginBottom:12,lineHeight:1.6}}>
+                Exporta tu progreso para abrirlo en otro dispositivo o guardarlo como respaldo.
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                {/* Export */}
+                <button onClick={()=>{
+                  const data = {
+                    version: 1,
+                    date: new Date().toISOString(),
+                    owned: [...owned],
+                    repeated,
+                  };
+                  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `mi-album-panini-${new Date().toISOString().slice(0,10)}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                  style={{flex:1,padding:"12px 0",background:"#0a1a10",border:"1px solid #2a5a38",
+                    borderRadius:10,color:"#50d0a0",cursor:"pointer",fontSize:13,
+                    fontFamily:"inherit",fontWeight:"600"}}>
+                  📤 Exportar
+                </button>
+
+                {/* Import */}
+                <button onClick={()=>{
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.accept = ".json";
+                  input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                      try {
+                        const data = JSON.parse(ev.target.result);
+                        if (!data.owned || !data.repeated) throw new Error("Formato inválido");
+                        if (window.confirm(`¿Importar este álbum? (${data.owned.length} figuritas)\nEsto reemplazará tu progreso actual.`)) {
+                          setOwned(new Set(data.owned));
+                          setRepeated(data.repeated);
+                        }
+                      } catch {
+                        alert("Archivo inválido. Asegúrate de usar un archivo exportado desde esta app.");
+                      }
+                    };
+                    reader.readAsText(file);
+                  };
+                  input.click();
+                }}
+                  style={{flex:1,padding:"12px 0",background:"#0a0a1a",border:"1px solid #3a3a6a",
+                    borderRadius:10,color:"#8090d0",cursor:"pointer",fontSize:13,
+                    fontFamily:"inherit",fontWeight:"600"}}>
+                  📥 Importar
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
