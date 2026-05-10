@@ -1084,6 +1084,100 @@ function FriendLinkInput({ myRepeats, myMissing }) {
   );
 }
 
+// ── QR Market Component ───────────────────────────────────────────────────────
+function QRMarket({ repeatList, missing }) {
+  const canvasRef = useRef();
+  const [qrReady, setQrReady] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [link, setLink] = useState("");
+
+  const buildLink = () => {
+    const missingByTeamMap = {};
+    missing.forEach(id=>{ const code=id.replace(/\d+$/,""); const num=parseInt(id.replace(code,"")); if(!missingByTeamMap[code])missingByTeamMap[code]=[]; missingByTeamMap[code].push(num); });
+    const mCompressed = Object.entries(missingByTeamMap).map(([code,nums])=>code+":"+nums.join(",")).join("|");
+    const rCompressed = repeatList.map(({id,count})=>id+":"+count).join(",");
+    const marketCode = btoa(rCompressed+"||"+mCompressed);
+    return window.location.origin + window.location.pathname + "?mercado=" + marketCode;
+  };
+
+  const generateQR = async () => {
+    setLoading(true);
+    try {
+      // Load qrcode library from CDN if not already loaded
+      if (!window.QRCode) {
+        await new Promise((res, rej) => {
+          const s = document.createElement("script");
+          s.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+      const url = buildLink();
+      setLink(url);
+      // Clear previous QR
+      const container = document.getElementById("qr-container");
+      if (container) container.innerHTML = "";
+      new window.QRCode(container, {
+        text: url,
+        width: 220,
+        height: 220,
+        colorDark: "#e8c84a",
+        colorLight: "#080810",
+        correctLevel: window.QRCode.CorrectLevel.M,
+      });
+      setQrReady(true);
+    } catch(e) {
+      console.error(e);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:18,marginBottom:12}}>
+      <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>📲 Mi QR de cambios</div>
+      <div style={{fontSize:13,color:"#507060",lineHeight:1.6,marginBottom:14}}>
+        Genera un QR con tus repetidas y faltantes. Tu amigo lo escanea con la cámara y ve exactamente qué pueden intercambiar.
+      </div>
+
+      {!qrReady && (
+        <button onClick={generateQR} disabled={loading}
+          style={{width:"100%",padding:"13px 0",background:"linear-gradient(135deg,#0a2a1a,#061810)",
+            border:"1px solid #2a6040",borderRadius:10,color:"#50d0a0",cursor:loading?"not-allowed":"pointer",
+            fontSize:14,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          {loading ? <>
+            <div style={{width:16,height:16,border:"2px solid #50d0a022",borderTop:"2px solid #50d0a0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>
+            Generando QR…
+          </> : "Generar mi QR"}
+        </button>
+      )}
+
+      {qrReady && (
+        <div style={{textAlign:"center"}}>
+          {/* QR Display */}
+          <div style={{display:"inline-block",background:"#080810",border:"2px solid #e8c84a44",borderRadius:12,padding:16,marginBottom:12}}>
+            <div id="qr-container"/>
+          </div>
+          <div style={{fontSize:12,color:"#406050",marginBottom:12}}>
+            Tu amigo escanea este QR con la cámara del celular
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>{ navigator.clipboard?.writeText(link); }}
+              style={{flex:1,padding:"10px 0",background:"#0a1a28",border:"1px solid #2a4060",
+                borderRadius:10,color:"#7090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
+              ⎘ Copiar link
+            </button>
+            <button onClick={generateQR}
+              style={{flex:1,padding:"10px 0",background:"#0a2a1a",border:"1px solid #1a4028",
+                borderRadius:10,color:"#40a060",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
+              ↺ Regenerar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PaniniTracker() {
   const [owned,    setOwned]    = useState(()=>new Set(loadData().owned));
   const [repeated, setRepeated] = useState(()=>loadData().repeated);
@@ -1683,46 +1777,8 @@ export default function PaniniTracker() {
         {tab==="cambios"&&(
           <div className="tab-content">
 
-            {/* ── GENERATE MY LINK ── */}
-            <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:18,marginBottom:12}}>
-              <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>🔗 Mi link de cambios</div>
-              <div style={{fontSize:13,color:"#507060",lineHeight:1.6,marginBottom:14}}>
-                Genera un link con tus repetidas y faltantes. Compártelo por WhatsApp y quien lo abra verá exactamente qué pueden intercambiar.
-              </div>
-              {(()=>{
-                // Compress missing: group by team → "MEX:1,3,5-10|BRA:2,4"
-                const missingByTeamMap = {};
-                missing.forEach(id=>{ const code=id.replace(/\d+$/,""); const num=parseInt(id.replace(code,"")); if(!missingByTeamMap[code])missingByTeamMap[code]=[]; missingByTeamMap[code].push(num); });
-                const mCompressed = Object.entries(missingByTeamMap).map(([code,nums])=>code+":"+nums.join(",")).join("|");
-                const rCompressed = repeatList.map(({id,count})=>id+":"+count).join(",");
-                const marketCode = btoa(rCompressed+"||"+mCompressed);
-                const link = window.location.origin + window.location.pathname + "?mercado=" + marketCode;
-                return (
-                  <div>
-                    <div style={{background:"#060c08",border:"1px solid #1a2a1a",borderRadius:8,padding:"10px 12px",
-                      fontSize:11,color:"#50a070",wordBreak:"break-all",fontFamily:"monospace",marginBottom:10,
-                      maxHeight:50,overflow:"hidden"}}>
-                      {link.slice(0,100)}…
-                    </div>
-                    <div style={{display:"flex",gap:8}}>
-                      <button onClick={()=>{navigator.clipboard?.writeText(link);}}
-                        style={{flex:1,padding:"11px 0",background:"#0a2a1a",border:"1px solid #2a6040",
-                          borderRadius:10,color:"#50d0a0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
-                        ⎘ Copiar link
-                      </button>
-                      <button onClick={()=>{
-                        const txt = `🔄 Mis cambios Panini WC2026\n\n🔁 Repito: ${repeatList.length} figuritas\n🔍 Busco: ${missing.length} figuritas\n\n👉 ${link}`;
-                        navigator.clipboard?.writeText(txt);
-                      }}
-                        style={{flex:1,padding:"11px 0",background:"#0a1a28",border:"1px solid #2a4060",
-                          borderRadius:10,color:"#7090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
-                        📱 Copiar para WhatsApp
-                      </button>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
+            {/* ── MI QR DE CAMBIOS ── */}
+            <QRMarket repeatList={repeatList} missing={missing} />
 
             {/* ── STATS ── */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
