@@ -1288,7 +1288,15 @@ export default function PaniniTracker() {
   const visibleSections = useMemo(()=>{
     let secs = ALBUM;
     if (activeGroup!=="ALL") secs=secs.filter(s=>activeGroup==="FWC"?s.key==="FWC":s.group===activeGroup);
-    if (searchQ.trim()) { const q=searchQ.trim().toUpperCase(); secs=secs.filter(s=>s.key.includes(q)||s.name.toUpperCase().includes(q)); }
+    if (searchQ.trim()) {
+      const q = searchQ.trim().toUpperCase();
+      // If it's a sticker ID, show only the team that contains it
+      if (ALL_IDS.includes(q)) {
+        secs = secs.filter(s=>s.stickers.some(st=>st.id===q));
+      } else {
+        secs = secs.filter(s=>s.key.includes(q)||s.name.toUpperCase().includes(q));
+      }
+    }
     return secs;
   },[activeGroup,searchQ]);
 
