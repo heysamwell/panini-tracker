@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import QRCode from "qrcode";
 
 // Inline SVG icons — no external dependency needed
 const IconBook    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>;
@@ -1107,16 +1108,9 @@ function QRMarket({ repeatList, missing }) {
     try {
       const url = buildLink();
       setLink(url);
-      // Load qrcode via esm.sh (allowed CDN)
-      const { QRCodeSVG, QRCodeCanvas } = await import("https://esm.sh/qrcode.react@3.1.0");
-      // Use canvas approach
       const canvas = document.createElement("canvas");
-      const size = 240;
-      canvas.width = size; canvas.height = size;
-      // Dynamically import qrcode library
-      const QRCode = await import("https://esm.sh/qrcode@1.5.3");
-      await QRCode.default.toCanvas(canvas, url, {
-        width: size,
+      await QRCode.toCanvas(canvas, url, {
+        width: 240,
         margin: 2,
         color: { dark: "#e8c84a", light: "#080810" },
       });
