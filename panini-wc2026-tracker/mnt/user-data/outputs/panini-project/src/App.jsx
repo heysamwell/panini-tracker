@@ -340,8 +340,9 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
 }
 
 // ── FWC Spread ────────────────────────────────────────────────────────────────
-function FWCSpread({ section, owned, repeated, have, pct, onToggle, onOpenRepeat }) {
+function FWCSpread({ section, owned, repeated, have, pct, expandAll, onToggle, onOpenRepeat }) {
   const [open, setOpen] = useState(false);
+  useEffect(()=>setOpen(expandAll),[expandAll]);
   return (
     <div style={{background:"#0e0e1a",border:"2px solid #e8c84a33",borderRadius:14,overflow:"hidden",marginBottom:8}}>
       <div onClick={()=>setOpen(o=>!o)}
@@ -375,9 +376,10 @@ function FWCSpread({ section, owned, repeated, have, pct, onToggle, onOpenRepeat
 // ── Coca-Cola Spread ──────────────────────────────────────────────────────────
 // Page 1: 6 stickers (CC1-CC6) in 2 rows of 3
 // Page 2: row of 3 (CC7-CC9) + row of 3 (CC10-CC12) + row of 2 (CC13-CC14) + Coca-Cola logo tile
-function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
+function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat }) {
   const { color, stickers } = section;
   const [open, setOpen] = useState(false);
+  useEffect(()=>setOpen(expandAll),[expandAll]);
   const have = stickers.filter(s=>owned.has(s.id)).length;
   const pct  = Math.round((have/14)*100);
   const s = n => stickers[n-1];
@@ -456,9 +458,10 @@ function CCSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
 }
 
 // ── Team Spread ───────────────────────────────────────────────────────────────
-function TeamSpread({ section, owned, repeated, onToggle, onOpenRepeat }) {
+function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat }) {
   const { key:code, name, flag, group, color, stickers } = section;
   const [open, setOpen] = useState(false);
+  useEffect(()=>setOpen(expandAll),[expandAll]);
   const have = stickers.filter(s=>owned.has(s.id)).length;
   const pct  = Math.round((have/20)*100);
   const s = n => stickers[n-1];
@@ -976,6 +979,8 @@ export default function PaniniTracker() {
   const totalRepeatCopies = repeatList.reduce((a,r)=>a+r.count,0);
   const myCode = useMemo(()=>encodeTrade(repeatList, missing),[repeatList, missing]);
 
+  const [expandAll, setExpandAll] = useState(false);
+
   const visibleSections = useMemo(()=>{
     let secs = ALBUM;
     if (activeGroup!=="ALL") secs=secs.filter(s=>activeGroup==="FWC"?s.key==="FWC":s.group===activeGroup);
@@ -1043,6 +1048,17 @@ export default function PaniniTracker() {
         {/* ══ ÁLBUM ══ */}
         {tab==="album"&&(
           <div>
+            {/* Expand/collapse all */}
+            <div style={{display:"flex",gap:6,marginBottom:10}}>
+              <button onClick={()=>setExpandAll(true)}
+                style={{flex:1,padding:"8px 0",background:"#0e0e1a",border:"1px solid #2a2a3a",borderRadius:8,color:"#a0a0c0",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>
+                ▾ Expandir todo
+              </button>
+              <button onClick={()=>setExpandAll(false)}
+                style={{flex:1,padding:"8px 0",background:"#0e0e1a",border:"1px solid #2a2a3a",borderRadius:8,color:"#a0a0c0",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>
+                ▸ Colapsar todo
+              </button>
+            </div>
             <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Buscar equipo… (ej: Mexico, BRA)"
               style={{width:"100%",background:"#0c0c18",border:"1px solid #202030",borderRadius:8,color:"#e0d8f0",fontSize:15,padding:"8px 12px",boxSizing:"border-box",fontFamily:"inherit",outline:"none",marginBottom:10}}/>
             <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8,marginBottom:10,scrollbarWidth:"none"}}>
@@ -1060,13 +1076,13 @@ export default function PaniniTracker() {
               const fwcPct = Math.round((fwcHave/20)*100);
               return (
                 <FWCSpread key="FWC" section={s} owned={owned} repeated={repeated}
-                  have={fwcHave} pct={fwcPct} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
+                  have={fwcHave} pct={fwcPct} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
               );
             })}
             {visibleSections.filter(s=>s.key!=="FWC").map(s=>(
               s.special==="cocacola"
-                ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
-                : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
+                ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
+                : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
             ))}
             {visibleSections.length===0&&<div style={{textAlign:"center",padding:40,color:"#303040",fontSize:12}}>Sin resultados</div>}
             <div style={{display:"flex",gap:12,justifyContent:"center",paddingTop:10,borderTop:"1px solid #141420"}}>
