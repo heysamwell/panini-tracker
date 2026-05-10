@@ -1,13 +1,16 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 
-// Load Inter from Google Fonts
-if (typeof document !== "undefined" && !document.getElementById("inter-font")) {
+// Load Inter + Bebas Neue from Google Fonts
+if (typeof document !== "undefined" && !document.getElementById("app-fonts")) {
   const link = document.createElement("link");
-  link.id = "inter-font";
+  link.id = "app-fonts";
   link.rel = "stylesheet";
-  link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap";
+  link.href = "https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap";
   document.head.appendChild(link);
 }
+
+const DISPLAY = "'Bebas Neue', Impact, sans-serif";
+const BODY    = "'Inter', system-ui, sans-serif";
 
 // ── Album data ────────────────────────────────────────────────────────────────
 const GROUPS = [
@@ -24,7 +27,7 @@ const GROUPS = [
   { id:"K", teams:[{code:"POR",name:"Portugal",flag:"🇵🇹"},{code:"COD",name:"Congo DR",flag:"🇨🇩"},{code:"UZB",name:"Uzbekistan",flag:"🇺🇿"},{code:"COL",name:"Colombia",flag:"🇨🇴"}] },
   { id:"L", teams:[{code:"ENG",name:"England",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},{code:"CRO",name:"Croatia",flag:"🇭🇷"},{code:"GHA",name:"Ghana",flag:"🇬🇭"},{code:"PAN",name:"Panama",flag:"🇵🇦"}] },
 ];
-const GROUP_COLORS = { A:"#5a9a70",B:"#5a709a",C:"#9a7050",D:"#7050aa",E:"#aa5050",F:"#50aaaa",G:"#8a8a40",H:"#aa5080",I:"#508a50",J:"#8a5050",K:"#5050aa",L:"#7aaa50" };
+const GROUP_COLORS = { A:"#22c55e",B:"#3b82f6",C:"#f59e0b",D:"#a855f7",E:"#ef4444",F:"#06b6d4",G:"#eab308",H:"#ec4899",I:"#10b981",J:"#f97316",K:"#6366f1",L:"#84cc16" };
 
 const buildAlbum = () => {
   const secs = [];
@@ -346,11 +349,13 @@ function FWCSpread({ section, owned, repeated, have, pct, expandAll, onToggle, o
   return (
     <div style={{background:"#0e0e1a",border:"2px solid #e8c84a33",borderRadius:14,overflow:"hidden",marginBottom:8}}>
       <div onClick={()=>setOpen(o=>!o)}
-        style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:10,background:"#e8c84a08",cursor:"pointer",userSelect:"none"}}>
+        style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:10,
+          background:"linear-gradient(135deg,#e8c84a30 0%,#e8c84a12 50%,#e8c84a05 100%)",
+          borderBottom:"1px solid #e8c84a30",cursor:"pointer",userSelect:"none"}}>
         <div style={{fontSize:22}}>🌍</div>
         <div style={{flex:1}}>
-          <div style={{fontSize:16,fontWeight:"bold"}}>FWC</div>
-          <div style={{fontSize:12,color:"#e8c84a88"}}>FWC0 – FWC19</div>
+          <div style={{fontSize:20,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>FWC</div>
+          <div style={{fontSize:12,color:"#e8c84a88",fontFamily:BODY}}>FWC0 – FWC19</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{textAlign:"right"}}>
@@ -391,12 +396,12 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat 
   return (
     <div style={{background:"#0e0e1a",border:"2px solid #e8302a44",borderRadius:14,overflow:"hidden",marginBottom:8}}>
       {/* Header */}
-      <div onClick={()=>setOpen(o=>!o)} style={{background:"linear-gradient(135deg,#e8302a22,#e8302a08)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}>
+      <div onClick={()=>setOpen(o=>!o)} style={{background:"linear-gradient(135deg,#e8302a35 0%,#e8302a15 50%,#e8302a05 100%)",padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none",borderBottom:"1px solid #e8302a30"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{fontSize:22}}>🥤</div>
           <div>
-            <div style={{fontSize:14,fontWeight:"bold",letterSpacing:-0.3}}>Coca-Cola</div>
-            <div style={{fontSize:12,color:"#e8302a99",letterSpacing:1,textTransform:"uppercase"}}>Sección especial · CC</div>
+            <div style={{fontSize:20,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>Coca-Cola</div>
+            <div style={{fontSize:12,color:"#e8302a99",letterSpacing:1,textTransform:"uppercase",fontFamily:BODY}}>Sección especial · CC</div>
           </div>
         </div>
         <div style={{textAlign:"right"}}>
@@ -474,13 +479,14 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
     <div style={{background:"#0e0e1a",border:`2px solid ${color}44`,borderRadius:14,overflow:"hidden",marginBottom:8}}>
       {/* Header — tap to toggle */}
       <div onClick={()=>setOpen(o=>!o)}
-        style={{background:`linear-gradient(135deg,${color}22,${color}08)`,
-          padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none"}}>
+        style={{background:`linear-gradient(135deg,${color}35 0%,${color}15 50%,${color}08 100%)`,
+          padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",userSelect:"none",
+          borderBottom:`1px solid ${color}30`}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{fontSize:22}}>{flag}</div>
           <div>
-            <div style={{fontSize:15,fontWeight:"bold",letterSpacing:-0.3}}>{name}</div>
-            <div style={{fontSize:12,color:`${color}bb`,letterSpacing:1,textTransform:"uppercase"}}>Grupo {group} · {code}</div>
+            <div style={{fontSize:20,fontWeight:"400",letterSpacing:1.5,fontFamily:DISPLAY,lineHeight:1}}>{name}</div>
+            <div style={{fontSize:12,color:`${color}bb`,letterSpacing:1,textTransform:"uppercase",fontFamily:BODY}}>Grupo {group} · {code}</div>
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -500,30 +506,30 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
         {/* Row 1: info placeholder (50%) | carta 1 (25%) | carta 2 (25%) */}
         <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:5,marginBottom:5}}>
           {/* Info tile — not selectable */}
-          <div style={{background:"linear-gradient(135deg,"+color+"18,"+color+"08)",
-            border:"1.5px solid "+color+"35",borderRadius:8,
+          <div style={{background:`linear-gradient(135deg,${color}28 0%,${color}10 60%,${color}05 100%)`,
+            border:"1.5px solid "+color+"40",borderRadius:8,
             display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"space-between",
             padding:"10px 12px",minHeight:90,boxSizing:"border-box",overflow:"hidden",position:"relative"}}>
             {/* Big code watermark */}
-            <div style={{position:"absolute",right:-4,top:-6,fontSize:52,fontWeight:"900",
-              color:color+"18",letterSpacing:-4,lineHeight:1,userSelect:"none",
-              fontFamily:"Arial Black, sans-serif"}}>
+            <div style={{position:"absolute",right:-4,top:-6,fontSize:52,fontWeight:"400",
+              color:color+"18",letterSpacing:2,lineHeight:1,userSelect:"none",
+              fontFamily:DISPLAY}}>
               {code}
             </div>
             {/* Top: group badge */}
             <div style={{background:color+"22",border:"1px solid "+color+"44",borderRadius:4,
-              padding:"2px 7px",fontSize:14,color:color,fontWeight:"bold",letterSpacing:2,
-              textTransform:"uppercase",zIndex:1}}>
+              padding:"2px 7px",fontSize:11,color:color,fontWeight:"bold",letterSpacing:2,
+              textTransform:"uppercase",zIndex:1,fontFamily:BODY}}>
               GRP {group}
             </div>
             {/* Main code */}
-            <div style={{fontSize:28,fontWeight:"900",color,lineHeight:1,letterSpacing:-1,
-              fontFamily:"Arial Black, sans-serif",zIndex:1}}>
+            <div style={{fontSize:32,fontWeight:"400",color,lineHeight:1,letterSpacing:3,
+              fontFamily:DISPLAY,zIndex:1}}>
               {code}
             </div>
             {/* Bottom: full name */}
-            <div style={{fontSize:14,color:color+"99",letterSpacing:0.5,
-              textTransform:"uppercase",zIndex:1,lineHeight:1.2}}>
+            <div style={{fontSize:10,color:color+"99",letterSpacing:0.5,
+              textTransform:"uppercase",zIndex:1,lineHeight:1.2,fontFamily:BODY}}>
               {name}
             </div>
           </div>
@@ -1008,17 +1014,17 @@ export default function PaniniTracker() {
       {/* Header + Tabs sticky together */}
       <div style={{position:"sticky",top:0,zIndex:20}}>
       {/* Header */}
-      <div style={{background:"linear-gradient(135deg,#0c1430,#142050,#0c2850)",padding:"14px 14px 10px",borderBottom:"2px solid #e8c84a"}}>
+      <div style={{background:"linear-gradient(135deg,#0a0f2e 0%,#0d1f5c 40%,#0a1a4a 70%,#0c2860 100%)",padding:"14px 14px 10px",borderBottom:"2px solid #e8c84a"}}>
         <div style={{maxWidth:520,margin:"0 auto"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
             <div>
-              <div style={{fontSize:14,letterSpacing:4,color:"#e8c84a",textTransform:"uppercase"}}>FIFA World Cup 2026™</div>
-              <div style={{fontSize:18,fontWeight:"bold",letterSpacing:-0.5}}>Panini Tracker</div>
+              <div style={{fontSize:14,letterSpacing:4,color:"#e8c84a",textTransform:"uppercase",fontFamily:BODY}}>FIFA World Cup 2026™</div>
+              <div style={{fontSize:28,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>Panini Tracker</div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               {savedPulse&&<div style={{fontSize:14,color:"#60b060",letterSpacing:1}}>💾</div>}
               <div style={{textAlign:"right"}}>
-                <div style={{fontSize:26,fontWeight:"bold",color:"#e8c84a",lineHeight:1}}>{pct}%</div>
+                <div style={{fontSize:32,fontWeight:"400",color:"#e8c84a",lineHeight:1,fontFamily:DISPLAY,letterSpacing:2}}>{pct}%</div>
                 <div style={{fontSize:15,color:"#707090"}}>{totalOwned}/{TOTAL}</div>
               </div>
             </div>
@@ -1103,8 +1109,8 @@ export default function PaniniTracker() {
             {/* Hero card */}
             <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:24,marginBottom:14,textAlign:"center"}}>
               <div style={{fontSize:48,marginBottom:12}}>⚽</div>
-              <div style={{fontSize:22,fontWeight:"900",color:"#e8c84a",letterSpacing:-0.5,marginBottom:4}}>Panini Tracker</div>
-              <div style={{fontSize:13,color:"#606078",marginBottom:16}}>FIFA World Cup 2026™</div>
+              <div style={{fontSize:32,fontWeight:"400",color:"#e8c84a",letterSpacing:3,fontFamily:DISPLAY,lineHeight:1,marginBottom:4}}>Panini Tracker</div>
+              <div style={{fontSize:13,color:"#606078",marginBottom:16,fontFamily:BODY}}>FIFA World Cup 2026™</div>
               <div style={{width:48,height:2,background:"#e8c84a33",margin:"0 auto 16px"}}/>
               <div style={{fontSize:14,color:"#9090b0",lineHeight:1.7}}>
                 Hecho por
@@ -1292,7 +1298,7 @@ export default function PaniniTracker() {
                     strokeLinecap="round"/>
                 </svg>
                 <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-                  <div style={{fontSize:30,fontWeight:"900",color:"#e8c84a",lineHeight:1}}>{pct}%</div>
+                  <div style={{fontSize:36,fontWeight:"400",color:"#e8c84a",lineHeight:1,fontFamily:DISPLAY,letterSpacing:3}}>{pct}%</div>
                   <div style={{fontSize:11,color:"#606078",marginTop:2}}>completado</div>
                 </div>
               </div>
@@ -1304,8 +1310,8 @@ export default function PaniniTracker() {
                   [repeatList.length, "Repetidas", "#a080e0"],
                 ].map(([val,label,color])=>(
                   <div key={label} style={{background:"#111120",borderRadius:10,padding:"10px 4px"}}>
-                    <div style={{fontSize:22,fontWeight:"900",color}}>{val}</div>
-                    <div style={{fontSize:11,color:"#404058",marginTop:2}}>{label}</div>
+                    <div style={{fontSize:32,fontWeight:"400",color,fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{val}</div>
+                    <div style={{fontSize:11,color:"#404058",marginTop:4,fontFamily:BODY}}>{label}</div>
                   </div>
                 ))}
               </div>
