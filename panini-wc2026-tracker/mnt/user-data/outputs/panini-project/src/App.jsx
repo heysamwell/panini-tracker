@@ -1095,11 +1095,10 @@ function QRMarket({ repeatList, missing }) {
   const [err, setErr] = useState("");
 
   const buildLink = () => {
-    const missingByTeamMap = {};
-    missing.forEach(id=>{ const code=id.replace(/\d+$/,""); const num=parseInt(id.replace(code,"")); if(!missingByTeamMap[code])missingByTeamMap[code]=[]; missingByTeamMap[code].push(num); });
-    const mCompressed = Object.entries(missingByTeamMap).map(([code,nums])=>code+":"+nums.join(",")).join("|");
+    // Only encode repeats — keeps QR small and scannable
+    // Missing is inferred by the friend when they compare
     const rCompressed = repeatList.map(({id,count})=>id+":"+count).join(",");
-    const marketCode = btoa(rCompressed+"||"+mCompressed);
+    const marketCode = btoa(rCompressed+"||");
     return window.location.origin + window.location.pathname + "?mercado=" + marketCode;
   };
 
@@ -1131,7 +1130,7 @@ function QRMarket({ repeatList, missing }) {
     <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:18,marginBottom:12}}>
       <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>📲 Mi QR de cambios</div>
       <div style={{fontSize:13,color:"#507060",lineHeight:1.6,marginBottom:14}}>
-        Genera un QR con tus repetidas y faltantes. Tu amigo lo escanea y ve qué pueden intercambiar.
+        Genera un QR con tus repetidas. Tu amigo lo escanea, ve cuáles de tus repetidas le faltan a él, y qué puede darte a ti.
       </div>
 
       {!qrDataUrl && !loading && (
