@@ -957,6 +957,123 @@ function TradeConfirm({ result, accentColor, onConfirm }) {
     </div>
   );
 }
+// ── Market helpers ────────────────────────────────────────────────────────────
+const decodeMarketLink = (code) => {
+  try {
+    const data = JSON.parse(atob(code));
+    const repeats = data.r ? data.r.split(",").filter(Boolean).map(s=>{
+      const [id,c]=s.split(":"); return {id, count:parseInt(c)||1};
+    }) : [];
+    const missing = data.m ? data.m.split(",").filter(Boolean) : [];
+    return { repeats, missing };
+  } catch { return null; }
+};
+
+// ── Friend Link Input ─────────────────────────────────────────────────────────
+function FriendLinkInput({ myRepeats, myMissing }) {
+  const [input, setInput] = useState("");
+  const [result, setResult] = useState(null);
+  const [err, setErr] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const compare = () => {
+    setErr(""); setResult(null);
+    let code = input.trim();
+    try { const url = new URL(code); code = url.searchParams.get("mercado") || code; } catch {}
+    const friend = decodeMarketLink(code);
+    if (!friend) { setErr("Link inválido. Pide a tu amigo que copie su link de nuevo."); return; }
+    const myMissingSet = new Set(myMissing);
+    const friendMissingSet = new Set(friend.missing);
+    const iGiveThem = myRepeats.filter(r=>friendMissingSet.has(r.id));
+    const theyGiveMe = friend.repeats.filter(r=>myMissingSet.has(r.id));
+    setResult({ iGiveThem, theyGiveMe });
+  };
+
+  return (
+    <div>
+      <input value={input} onChange={e=>setInput(e.target.value)}
+        placeholder="Pega aquí el link de tu amigo…"
+        style={{width:"100%",background:"#060c08",border:"1px solid #1a2a1a",borderRadius:8,
+          color:"#a0c0a8",fontSize:12,padding:"10px 12px",boxSizing:"border-box",
+          fontFamily:"monospace",outline:"none",marginBottom:8}}/>
+      {err&&<div style={{fontSize:12,color:"#c05050",marginBottom:8}}>{err}</div>}
+      <button onClick={compare}
+        style={{width:"100%",padding:"11px 0",background:"linear-gradient(135deg,#0a2a1a,#061810)",
+          border:"1px solid #2a6040",borderRadius:10,color:"#50d0a0",cursor:"pointer",
+          fontSize:13,fontFamily:BODY,fontWeight:"600",marginBottom:result?12:0}}>
+        🔍 Comparar
+      </button>
+
+      {result&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
+            <div style={{background:"#0a1a10",border:"1px solid #1a4028",borderRadius:10,padding:12,textAlign:"center"}}>
+              <div style={{fontSize:26,fontWeight:"400",color:"#50d0a0",fontFamily:DISPLAY,letterSpacing:2}}>{result.theyGiveMe.length}</div>
+              <div style={{fontSize:11,color:"#406050",textTransform:"uppercase",letterSpacing:1,marginTop:2}}>Te pueden dar</div>
+            </div>
+            <div style={{background:"#0d0a1a",border:"1px solid #2a1a40",borderRadius:10,padding:12,textAlign:"center"}}>
+              <div style={{fontSize:26,fontWeight:"400",color:"#a080e0",fontFamily:DISPLAY,letterSpacing:2}}>{result.iGiveThem.length}</div>
+              <div style={{fontSize:11,color:"#504060",textTransform:"uppercase",letterSpacing:1,marginTop:2}}>Puedes dar</div>
+            </div>
+          </div>
+
+          {result.theyGiveMe.length>0&&(
+            <div style={{background:"#090f0d",border:"1px solid #1a3a28",borderRadius:10,overflow:"hidden",marginBottom:8}}>
+              <div style={{padding:"9px 12px",borderBottom:"1px solid #1a3a28"}}>
+                <span style={{fontSize:13,color:"#50d0a0",fontWeight:"600"}}>✓ Tu amigo te puede dar ({result.theyGiveMe.length})</span>
+              </div>
+              <div style={{padding:"8px 12px",display:"flex",flexWrap:"wrap",gap:5}}>
+                {result.theyGiveMe.map(({id,count})=>(
+                  <div key={id} style={{display:"flex",alignItems:"center",background:"#0a1a12",border:"1px solid #2a5a38",borderRadius:6,overflow:"hidden"}}>
+                    <div style={{padding:"4px 8px",fontSize:12,color:"#50d0a0",fontWeight:"600"}}>{id}</div>
+                    {count>1&&<div style={{padding:"4px 7px",background:"#0d2018",fontSize:10,color:"#3a7050"}}>×{count}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {result.iGiveThem.length>0&&(
+            <div style={{background:"#090d12",border:"1px solid #1a2a3a",borderRadius:10,overflow:"hidden",marginBottom:8}}>
+              <div style={{padding:"9px 12px",borderBottom:"1px solid #1a2a3a"}}>
+                <span style={{fontSize:13,color:"#a080e0",fontWeight:"600"}}>◈ Tú le puedes dar ({result.iGiveThem.length})</span>
+              </div>
+              <div style={{padding:"8px 12px",display:"flex",flexWrap:"wrap",gap:5}}>
+                {result.iGiveThem.map(({id,count})=>(
+                  <div key={id} style={{display:"flex",alignItems:"center",background:"#0a0d1a",border:"1px solid #2a2a5a",borderRadius:6,overflow:"hidden"}}>
+                    <div style={{padding:"4px 8px",fontSize:12,color:"#a080e0",fontWeight:"600"}}>{id}</div>
+                    {count>1&&<div style={{padding:"4px 7px",background:"#0d0d20",fontSize:10,color:"#505090"}}>×{count}</div>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {result.theyGiveMe.length===0&&result.iGiveThem.length===0&&(
+            <div style={{textAlign:"center",padding:20,color:"#404050",fontSize:13}}>
+              😕 No hay intercambios posibles con este amigo por ahora.
+            </div>
+          )}
+
+          {(result.theyGiveMe.length>0||result.iGiveThem.length>0)&&(
+            <button onClick={()=>{
+              const txt=["🔄 Propuesta de intercambio Panini WC2026",
+                result.theyGiveMe.length>0?"Me das: "+result.theyGiveMe.map(r=>r.id).join(", "):"",
+                result.iGiveThem.length>0?"Te doy: "+result.iGiveThem.map(r=>r.id).join(", "):"",
+              ].filter(Boolean).join("\n");
+              navigator.clipboard?.writeText(txt);
+              setCopied(true); setTimeout(()=>setCopied(false),2000);
+            }} style={{width:"100%",padding:"10px 0",background:"#0c0c1a",border:"1px solid #303060",
+              borderRadius:10,color:copied?"#50d0a0":"#6070c0",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
+              {copied?"✓ ¡Copiado!":"⎘ Copiar propuesta para WhatsApp"}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function PaniniTracker() {
   const [owned,    setOwned]    = useState(()=>new Set(loadData().owned));
   const [repeated, setRepeated] = useState(()=>loadData().repeated);
@@ -1555,50 +1672,81 @@ export default function PaniniTracker() {
 
         {tab==="cambios"&&(
           <div className="tab-content">
-            {/* Hero */}
-            <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:20,marginBottom:14,textAlign:"center"}}>
-              <div style={{fontSize:42,marginBottom:8}}>🔄</div>
-              <div style={{fontSize:15,fontWeight:"bold",marginBottom:6}}>Comparar con un amigo</div>
-              <div style={{fontSize:14,color:"#507060",lineHeight:1.7,marginBottom:16}}>
-                Comparte tu código con un amigo.<br/>
-                Cuando él pegue el suyo, la app calcula<br/>
-                exactamente qué figuritas se pueden intercambiar.
+
+            {/* ── GENERATE MY LINK ── */}
+            <div style={{background:"linear-gradient(135deg,#0a1e18,#061410)",border:"1px solid #1a3a28",borderRadius:14,padding:18,marginBottom:12}}>
+              <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>🔗 Mi link de cambios</div>
+              <div style={{fontSize:13,color:"#507060",lineHeight:1.6,marginBottom:14}}>
+                Genera un link con tus repetidas y faltantes. Compártelo por WhatsApp y quien lo abra verá exactamente qué pueden intercambiar.
               </div>
-              <button onClick={()=>setShowTrade(true)}
-                style={{padding:"13px 28px",background:"linear-gradient(135deg,#0a2a1a,#061810)",
-                  border:"1px solid #2a6040",borderRadius:12,color:"#50d0a0",cursor:"pointer",
-                  fontSize:14,fontFamily:"inherit",fontWeight:"bold",letterSpacing:0.5}}>
-                Abrir comparador
-              </button>
+              {(()=>{
+                const marketCode = btoa(JSON.stringify({
+                  r: repeatList.map(({id,count})=>id+":"+count).join(","),
+                  m: missing.slice(0,200).join(","), // limit URL size
+                }));
+                const link = window.location.origin + window.location.pathname + "?mercado=" + marketCode;
+                return (
+                  <div>
+                    <div style={{background:"#060c08",border:"1px solid #1a2a1a",borderRadius:8,padding:"10px 12px",
+                      fontSize:11,color:"#50a070",wordBreak:"break-all",fontFamily:"monospace",marginBottom:10,
+                      maxHeight:50,overflow:"hidden"}}>
+                      {link.slice(0,100)}…
+                    </div>
+                    <div style={{display:"flex",gap:8}}>
+                      <button onClick={()=>{navigator.clipboard?.writeText(link);}}
+                        style={{flex:1,padding:"11px 0",background:"#0a2a1a",border:"1px solid #2a6040",
+                          borderRadius:10,color:"#50d0a0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
+                        ⎘ Copiar link
+                      </button>
+                      <button onClick={()=>{
+                        const txt = `🔄 Mis cambios Panini WC2026\n\n🔁 Repito: ${repeatList.length} figuritas\n🔍 Busco: ${missing.length} figuritas\n\n👉 ${link}`;
+                        navigator.clipboard?.writeText(txt);
+                      }}
+                        style={{flex:1,padding:"11px 0",background:"#0a1a28",border:"1px solid #2a4060",
+                          borderRadius:10,color:"#7090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
+                        📱 Copiar para WhatsApp
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
-            {/* Stats */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+            {/* ── STATS ── */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
               <div style={{background:"#0c0c18",border:"1px solid #1a3a28",borderRadius:10,padding:12,textAlign:"center"}}>
-                <div style={{fontSize:22,fontWeight:"bold",color:"#50d0a0"}}>{repeatList.length}</div>
-                <div style={{fontSize:15,color:"#406050",letterSpacing:1,textTransform:"uppercase",marginTop:2}}>Puedo ofrecer</div>
+                <div style={{fontSize:28,fontWeight:"400",color:"#50d0a0",fontFamily:DISPLAY,letterSpacing:2}}>{repeatList.length}</div>
+                <div style={{fontSize:12,color:"#406050",letterSpacing:1,textTransform:"uppercase",marginTop:2}}>Puedo ofrecer</div>
               </div>
               <div style={{background:"#0c0c18",border:"1px solid #1a2a3a",borderRadius:10,padding:12,textAlign:"center"}}>
-                <div style={{fontSize:22,fontWeight:"bold",color:"#8090d0"}}>{missing.length}</div>
+                <div style={{fontSize:28,fontWeight:"400",color:"#8090d0",fontFamily:DISPLAY,letterSpacing:2}}>{missing.length}</div>
                 <div style={{fontSize:15,color:"#405060",letterSpacing:1,textTransform:"uppercase",marginTop:2}}>Necesito</div>
               </div>
             </div>
 
-            {/* How it works */}
-            <div style={{fontSize:16,color:"#404050",marginBottom:8,letterSpacing:2,textTransform:"uppercase"}}>Cómo funciona</div>
-            {[
-              ["1","Abre el comparador y copia tu código"],
-              ["2","Mándaselo a tu amigo por WhatsApp"],
-              ["3","Él pega tu código en su app (tab Cambios)"],
-              ["4","Cada quien ve qué figuritas pueden intercambiarse"],
-            ].map(([n,t])=>(
-              <div key={n} style={{display:"flex",gap:10,padding:"9px 0",borderBottom:"1px solid #101018",alignItems:"center"}}>
-                <div style={{width:22,height:22,borderRadius:11,background:"#0a2a1a",border:"1px solid #2a5a38",
-                  display:"flex",alignItems:"center",justifyContent:"center",
-                  fontSize:16,color:"#50d0a0",fontWeight:"bold",flexShrink:0}}>{n}</div>
-                <div style={{fontSize:14,color:"#607060"}}>{t}</div>
+            {/* ── VER LINK DE AMIGO ── */}
+            <div style={{background:"#0e0e1a",border:"1px solid #2a2a40",borderRadius:14,padding:18,marginBottom:12}}>
+              <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>👀 Ver perfil de un amigo</div>
+              <div style={{fontSize:13,color:"#506070",lineHeight:1.6,marginBottom:12}}>
+                Pega el link que te mandó tu amigo para ver sus repetidas y faltantes, y compara con las tuyas.
               </div>
-            ))}
+              <FriendLinkInput myRepeats={repeatList} myMissing={missing} onConfirm={confirmTrade}/>
+            </div>
+
+            {/* ── COMPARADOR CLÁSICO ── */}
+            <div style={{background:"#0a0a14",border:"1px solid #1a1a28",borderRadius:14,padding:18}}>
+              <div style={{fontSize:16,fontWeight:"700",marginBottom:4}}>🔄 Comparador de códigos</div>
+              <div style={{fontSize:13,color:"#405060",lineHeight:1.6,marginBottom:12}}>
+                También puedes usar el comparador original intercambiando códigos de texto.
+              </div>
+              <button onClick={()=>setShowTrade(true)}
+                style={{width:"100%",padding:"12px 0",background:"linear-gradient(135deg,#0a2a1a,#061810)",
+                  border:"1px solid #2a6040",borderRadius:10,color:"#50d0a0",cursor:"pointer",
+                  fontSize:14,fontFamily:BODY,fontWeight:"600"}}>
+                Abrir comparador de códigos
+              </button>
+            </div>
+
           </div>
         )}
 
