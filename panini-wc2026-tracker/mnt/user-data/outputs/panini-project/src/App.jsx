@@ -1105,10 +1105,16 @@ function QRMarket({ repeatList, missing }) {
   const generateQR = async () => {
     setLoading(true); setErr(""); setQrDataUrl(null);
     try {
-      const url = buildLink();
-      setLink(url);
+      const longUrl = buildLink();
+      // Shorten with TinyURL public API
+      let shortUrl = longUrl;
+      try {
+        const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`);
+        if (res.ok) shortUrl = await res.text();
+      } catch { /* fallback to long url */ }
+      setLink(shortUrl);
       const canvas = document.createElement("canvas");
-      await QRCode.toCanvas(canvas, url, {
+      await QRCode.toCanvas(canvas, shortUrl, {
         width: 240,
         margin: 2,
         color: { dark: "#e8c84a", light: "#080810" },
@@ -1145,7 +1151,7 @@ function QRMarket({ repeatList, missing }) {
       {loading && (
         <div style={{textAlign:"center",padding:20}}>
           <div style={{width:28,height:28,border:"3px solid #50d0a022",borderTop:"3px solid #50d0a0",borderRadius:"50%",animation:"spin 0.8s linear infinite",margin:"0 auto 8px"}}/>
-          <div style={{fontSize:12,color:"#406050"}}>Generando QR…</div>
+          <div style={{fontSize:12,color:"#406050"}}>Acortando link y generando QR…</div>
         </div>
       )}
 
