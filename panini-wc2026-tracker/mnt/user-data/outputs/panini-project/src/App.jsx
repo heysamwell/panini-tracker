@@ -960,11 +960,21 @@ function TradeConfirm({ result, accentColor, onConfirm }) {
 // ── Market helpers ────────────────────────────────────────────────────────────
 const decodeMarketLink = (code) => {
   try {
-    const data = JSON.parse(atob(code));
-    const repeats = data.r ? data.r.split(",").filter(Boolean).map(s=>{
+    const raw = atob(code);
+    const [rPart, mPart] = raw.split("||");
+    // Decode repeats: "MEX1:2,BRA3:1"
+    const repeats = rPart ? rPart.split(",").filter(Boolean).map(s=>{
       const [id,c]=s.split(":"); return {id, count:parseInt(c)||1};
-    }) : [];
-    const missing = data.m ? data.m.split(",").filter(Boolean) : [];
+    }).filter(r=>r.id) : [];
+    // Decode missing: "MEX:1,3,5|BRA:2,4"
+    const missing = [];
+    if (mPart) {
+      mPart.split("|").forEach(chunk=>{
+        const [code,...nums] = chunk.split(":");
+        const numList = nums.join(":").split(",").map(Number).filter(n=>!isNaN(n)&&n>0);
+        numList.forEach(n=>missing.push(code+n));
+      });
+    }
     return { repeats, missing };
   } catch { return null; }
 };
@@ -1680,10 +1690,12 @@ export default function PaniniTracker() {
                 Genera un link con tus repetidas y faltantes. Compártelo por WhatsApp y quien lo abra verá exactamente qué pueden intercambiar.
               </div>
               {(()=>{
-                const marketCode = btoa(JSON.stringify({
-                  r: repeatList.map(({id,count})=>id+":"+count).join(","),
-                  m: missing.slice(0,200).join(","), // limit URL size
-                }));
+                // Compress missing: group by team → "MEX:1,3,5-10|BRA:2,4"
+                const missingByTeamMap = {};
+                missing.forEach(id=>{ const code=id.replace(/\d+$/,""); const num=parseInt(id.replace(code,"")); if(!missingByTeamMap[code])missingByTeamMap[code]=[]; missingByTeamMap[code].push(num); });
+                const mCompressed = Object.entries(missingByTeamMap).map(([code,nums])=>code+":"+nums.join(",")).join("|");
+                const rCompressed = repeatList.map(({id,count})=>id+":"+count).join(",");
+                const marketCode = btoa(rCompressed+"||"+mCompressed);
                 const link = window.location.origin + window.location.pathname + "?mercado=" + marketCode;
                 return (
                   <div>
