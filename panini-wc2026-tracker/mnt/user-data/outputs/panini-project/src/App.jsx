@@ -304,7 +304,7 @@ function RepeatModal({ id, count, color, onSet, onClose }) {
 }
 
 // ── Sticker box ───────────────────────────────────────────────────────────────
-function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRepeat }) {
+function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRepeat, highlight }) {
   size = size || "md";
   const has = owned.has(id);
   const rep = repeated[id] || 0;
@@ -312,9 +312,9 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
   const [justMarked, setJustMarked] = useState(false);
   const minH = size==="lg" ? 90 : size==="md" ? 72 : 56;
   const numFs = size==="lg" ? 18 : size==="md" ? 15 : 12;
-  const bg   = has ? (rep>0 ? "#2a1a6e" : color+"22") : "#0d0d1a";
-  const bCol = has ? (rep>0 ? "#8060e0" : color)       : "#252535";
-  const textC= has ? (rep>0 ? "#c0a0ff" : color)       : "#35354a";
+  const bg   = highlight ? "#2a2a0a" : has ? (rep>0 ? "#2a1a6e" : color+"22") : "#0d0d1a";
+  const bCol = highlight ? "#e8c84a"  : has ? (rep>0 ? "#8060e0" : color)     : "#252535";
+  const textC= highlight ? "#e8c84a"  : has ? (rep>0 ? "#c0a0ff" : color)     : "#35354a";
 
   const handleToggle = () => {
     if (!has) { setJustMarked(true); setTimeout(()=>setJustMarked(false), 400); }
@@ -322,11 +322,11 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
   };
 
   return (
-    <div style={{width:"100%",minHeight:minH,background:bg,border:"1.5px solid "+bCol,borderRadius:8,
+    <div id={"sticker-"+id} style={{width:"100%",minHeight:minH,background:bg,border:"1.5px solid "+bCol,borderRadius:8,
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
       position:"relative",fontFamily:BODY,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",
       transform: pressing ? "scale(0.94)" : justMarked ? "scale(1.06)" : "scale(1)",
-      boxShadow: justMarked ? `0 0 12px ${color}66` : "none",
+      boxShadow: highlight ? `0 0 16px #e8c84a88` : justMarked ? `0 0 12px ${color}66` : "none",
       transition:"transform 0.12s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s"}}>
 
       {/* Main tap area */}
@@ -491,16 +491,19 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat,
 }
 
 // ── Team Spread ───────────────────────────────────────────────────────────────
-function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats }) {
+function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats, stickerHighlight }) {
   const { key:code, name, flag, group, color, stickers } = section;
   const [open, setOpen] = useState(false);
   useEffect(()=>setOpen(expandAll),[expandAll]);
+  // Auto-open if highlighted sticker is in this section
+  useEffect(()=>{ if(stickerHighlight && stickers.some(s=>s.id===stickerHighlight)) setOpen(true); },[stickerHighlight]);
   const have = stickers.filter(s=>owned.has(s.id)).length;
   const pct  = Math.round((have/20)*100);
   const s = n => stickers[n-1];
   const box = (n, size="md") => (
     <StickerBox key={n} id={s(n).id} num={n} color={color} size={size}
-      owned={owned} repeated={repeated} onToggle={onToggle} onOpenRepeat={onOpenRepeat}/>
+      owned={owned} repeated={repeated} onToggle={onToggle} onOpenRepeat={onOpenRepeat}
+      highlight={stickerHighlight===s(n).id}/>
   );
 
   return (
@@ -1280,6 +1283,7 @@ export default function PaniniTracker() {
   const myCode = useMemo(()=>encodeTrade(repeatList, missing),[repeatList, missing]);
 
   const [expandAll, setExpandAll] = useState(false);
+  const [stickerHighlight, setStickerHighlight] = useState(null);
 
   const visibleSections = useMemo(()=>{
     let secs = ALBUM;
@@ -1377,8 +1381,35 @@ export default function PaniniTracker() {
                 ▸ Colapsar todo
               </button>
             </div>
-            <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="Buscar equipo… (ej: Mexico, BRA)"
-              style={{width:"100%",background:"#0c0c18",border:"1px solid #202030",borderRadius:8,color:"#e0d8f0",fontSize:15,padding:"8px 12px",boxSizing:"border-box",fontFamily:"inherit",outline:"none",marginBottom:10}}/>
+
+            {/* Search — detects sticker IDs like MEX7 or FWC3 */}
+            <div style={{position:"relative",marginBottom:10}}>
+              <input value={searchQ} onChange={e=>{
+                const v = e.target.value.toUpperCase().trim();
+                setSearchQ(e.target.value);
+                // If it looks like a sticker ID, find and highlight it
+                if (ALL_IDS.includes(v)) {
+                  setStickerHighlight(v);
+                  setExpandAll(true);
+                  setTimeout(()=>{
+                    const el = document.getElementById("sticker-"+v);
+                    if (el) el.scrollIntoView({behavior:"smooth", block:"center"});
+                  }, 300);
+                } else {
+                  setStickerHighlight(null);
+                }
+              }} placeholder="Buscar equipo o figurita… (ej: Mexico, BRA, MEX7)"
+                style={{width:"100%",background:"#0c0c18",border:"1px solid #202030",borderRadius:8,
+                  color:"#e0d8f0",fontSize:15,padding:"8px 36px 8px 12px",boxSizing:"border-box",
+                  fontFamily:"inherit",outline:"none"}}/>
+              {searchQ && (
+                <button onClick={()=>{setSearchQ(""); setStickerHighlight(null);}}
+                  style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
+                    background:"none",border:"none",color:"#505060",fontSize:16,cursor:"pointer",padding:0}}>
+                  ✕
+                </button>
+              )}
+            </div>
             <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8,marginBottom:10,scrollbarWidth:"none"}}>
               {["ALL","FWC",...GROUPS.map(g=>g.id)].map(g=>{
                 const col=g==="ALL"||g==="FWC"?"#e8c84a":(GROUP_COLORS[g]||"#e8c84a");
@@ -1399,8 +1430,8 @@ export default function PaniniTracker() {
             })}
             {visibleSections.filter(s=>s.key!=="FWC").map(s=>(
               s.special==="cocacola"
-                ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats}/>
-                : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats}/>
+                ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats} stickerHighlight={stickerHighlight}/>
+                : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats} stickerHighlight={stickerHighlight}/>
             ))}
             {visibleSections.length===0&&<div style={{textAlign:"center",padding:40,color:"#303040",fontSize:12}}>Sin resultados</div>}
             <div style={{display:"flex",gap:12,justifyContent:"center",paddingTop:10,borderTop:"1px solid #141420"}}>
