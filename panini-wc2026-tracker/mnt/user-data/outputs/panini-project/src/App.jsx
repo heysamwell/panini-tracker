@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { BookOpen, BarChart2, Copy, CircleDashed, ArrowLeftRight, Heart } from "lucide-react";
 
 // Load Inter + Bebas Neue from Google Fonts
 if (typeof document !== "undefined" && !document.getElementById("app-fonts")) {
@@ -419,11 +420,13 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat 
             <div style={{fontSize:12,color:"#e8302a99",letterSpacing:1,textTransform:"uppercase",fontFamily:BODY}}>Sección especial · CC</div>
           </div>
         </div>
-        <div style={{textAlign:"right"}}>
-          <div style={{fontSize:18,fontWeight:"bold",color:"#e8302a"}}>{pct}%</div>
-          <div style={{fontSize:12,color:"#505068"}}>{have}/14</div>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:17,fontWeight:"bold",color:"#e8302a"}}>{pct}%</div>
+            <div style={{fontSize:12,color:"#505068"}}>{have}/14</div>
+          </div>
+          <div style={{fontSize:16,color:"#e8302a88",transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
         </div>
-        <div style={{fontSize:16,color:"#e8302a88",transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
       </div>
       <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:"#e8302a",transition:"width 0.3s"}}/></div>
 
@@ -1016,7 +1019,14 @@ export default function PaniniTracker() {
     finally { setPdfLoading(false); }
   };
 
-  const TABS=[{k:"album",icon:"◉",label:"Álbum"},{k:"stats",icon:"📊",label:"Stats"},{k:"repetidas",icon:"◈",label:"Repet."},{k:"faltantes",icon:"○",label:"Faltan"},{k:"cambios",icon:"🔄",label:"Cambios"},{k:"about",icon:"☕",label:"Acerca"}];
+  const TABS=[
+    {k:"album",    icon:<BookOpen size={18}/>,       label:"Álbum"},
+    {k:"stats",    icon:<BarChart2 size={18}/>,       label:"Stats"},
+    {k:"repetidas",icon:<Copy size={18}/>,            label:"Repet."},
+    {k:"faltantes",icon:<CircleDashed size={18}/>,    label:"Faltan"},
+    {k:"cambios",  icon:<ArrowLeftRight size={18}/>,  label:"Cambios"},
+    {k:"about",    icon:<Heart size={18}/>,           label:"Acerca"},
+  ];
 
   return (
     <div style={{minHeight:"100vh",background:"#080810",fontFamily:BODY,color:"#e0d8f0"}}>
@@ -1067,8 +1077,9 @@ export default function PaniniTracker() {
       {/* Tabs */}
       <div style={{background:"#0c0c18",borderBottom:"1px solid #181828",display:"flex"}}>
         {TABS.map(t=>(
-          <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"10px 2px",background:"none",border:"none",cursor:"pointer",color:tab===t.k?"#e8c84a":"#404060",fontSize:9,letterSpacing:0.5,textTransform:"uppercase",borderBottom:tab===t.k?"2px solid #e8c84a":"2px solid transparent",transition:"all 0.2s"}}>
-            <div style={{fontSize:18,marginBottom:2}}>{t.icon}</div>{t.label}
+          <button key={t.k} onClick={()=>setTab(t.k)} style={{flex:1,padding:"10px 2px",background:"none",border:"none",cursor:"pointer",color:tab===t.k?"#e8c84a":"#404060",fontSize:9,letterSpacing:0.5,textTransform:"uppercase",borderBottom:tab===t.k?"2px solid #e8c84a":"2px solid transparent",transition:"all 0.2s",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+            <span style={{display:"flex",alignItems:"center",justifyContent:"center"}}>{t.icon}</span>
+            {t.label}
           </button>
         ))}
       </div>
@@ -1125,6 +1136,41 @@ export default function PaniniTracker() {
               ))}
             </div>
             <div style={{textAlign:"center",fontSize:14,color:"#252535",marginTop:3}}>Tap = marcar · "+ repetida" = registrar copias extra</div>
+
+            {/* Export / Import quick access */}
+            <div style={{display:"flex",gap:8,marginTop:14,paddingTop:14,borderTop:"1px solid #141420"}}>
+              <button onClick={()=>{
+                const data={version:1,date:new Date().toISOString(),owned:[...owned],repeated};
+                const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+                const url=URL.createObjectURL(blob);
+                const a=document.createElement("a");
+                a.href=url; a.download=`mi-album-panini-${new Date().toISOString().slice(0,10)}.json`; a.click();
+                URL.revokeObjectURL(url);
+              }} style={{flex:1,padding:"10px 0",background:"#0a1a10",border:"1px solid #2a5a38",borderRadius:10,color:"#50d0a0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                📤 Exportar
+              </button>
+              <button onClick={()=>{
+                const input=document.createElement("input");
+                input.type="file"; input.accept=".json";
+                input.onchange=e=>{
+                  const file=e.target.files[0]; if(!file) return;
+                  const reader=new FileReader();
+                  reader.onload=ev=>{
+                    try {
+                      const data=JSON.parse(ev.target.result);
+                      if(!data.owned||!data.repeated) throw new Error();
+                      if(window.confirm(`¿Importar? (${data.owned.length} figuritas)\nEsto reemplazará tu progreso actual.`)){
+                        setOwned(new Set(data.owned)); setRepeated(data.repeated);
+                      }
+                    } catch { alert("Archivo inválido."); }
+                  };
+                  reader.readAsText(file);
+                };
+                input.click();
+              }} style={{flex:1,padding:"10px 0",background:"#0a0a1a",border:"1px solid #3a3a6a",borderRadius:10,color:"#8090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                📥 Importar
+              </button>
+            </div>
           </div>
         )}
 
