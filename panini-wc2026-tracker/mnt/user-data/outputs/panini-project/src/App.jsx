@@ -1,5 +1,12 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { BookOpen, BarChart2, Copy, CircleDashed, ArrowLeftRight, Heart } from "lucide-react";
+
+// Inline SVG icons — no external dependency needed
+const IconBook    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>;
+const IconBar     = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>;
+const IconCopy    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
+const IconCircle  = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4 2"><circle cx="12" cy="12" r="10"/></svg>;
+const IconArrows  = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>;
+const IconHeart   = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>;
 
 // Load Inter + Bebas Neue from Google Fonts
 if (typeof document !== "undefined" && !document.getElementById("app-fonts")) {
@@ -316,8 +323,7 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
   return (
     <div style={{width:"100%",minHeight:minH,background:bg,border:"1.5px solid "+bCol,borderRadius:8,
       display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      transition:"background 0.2s, border-color 0.2s",position:"relative",
-      fontFamily:BODY,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",
+      position:"relative",fontFamily:BODY,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",
       transform: pressing ? "scale(0.94)" : justMarked ? "scale(1.06)" : "scale(1)",
       boxShadow: justMarked ? `0 0 12px ${color}66` : "none",
       transition:"transform 0.12s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s"}}>
@@ -1020,12 +1026,12 @@ export default function PaniniTracker() {
   };
 
   const TABS=[
-    {k:"album",    icon:<BookOpen size={18}/>,       label:"Álbum"},
-    {k:"stats",    icon:<BarChart2 size={18}/>,       label:"Stats"},
-    {k:"repetidas",icon:<Copy size={18}/>,            label:"Repet."},
-    {k:"faltantes",icon:<CircleDashed size={18}/>,    label:"Faltan"},
-    {k:"cambios",  icon:<ArrowLeftRight size={18}/>,  label:"Cambios"},
-    {k:"about",    icon:<Heart size={18}/>,           label:"Acerca"},
+    {k:"album",    icon:<IconBook/>,    label:"Álbum"},
+    {k:"stats",    icon:<IconBar/>,     label:"Stats"},
+    {k:"repetidas",icon:<IconCopy/>,    label:"Repet."},
+    {k:"faltantes",icon:<IconCircle/>,  label:"Faltan"},
+    {k:"cambios",  icon:<IconArrows/>,  label:"Cambios"},
+    {k:"about",    icon:<IconHeart/>,   label:"Acerca"},
   ];
 
   return (
