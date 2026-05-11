@@ -1760,7 +1760,11 @@ function PaniniApp() {
     {k:"repetidas",icon:<IconCopy/>,    label:"Repet."},
     {k:"faltantes",icon:<IconCircle/>,  label:"Faltan"},
     {k:"cambios",  icon:<IconArrows/>,  label:"Cambios"},
-    {k:"about",    icon:<IconHeart/>,   label:"Acerca"},
+    {k:"about",
+      icon: user
+        ? <div style={{width:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#3b82f6,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:"bold",color:"#fff"}}>{user.email?.[0]?.toUpperCase()}</div>
+        : <IconHeart/>,
+      label: user ? "Perfil" : "Acerca"},
   ];
 
   return (
