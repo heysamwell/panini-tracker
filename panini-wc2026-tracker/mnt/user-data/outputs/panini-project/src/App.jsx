@@ -1342,8 +1342,15 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
     return { id:g.id, pct:Math.round((have/total)*100), col:GROUP_COLORS[g.id] };
   });
 
-  const generate = () => {
+  const generate = async () => {
     setGenerating(true);
+    // Load Bebas Neue for canvas
+    try {
+      const font = new FontFace("BebasNeue", "url(https://fonts.gstatic.com/s/bebasneue/v14/JTUSjIg69CK48gW7PXoo9WdhyyTh89ZNpQ.woff2)");
+      await font.load();
+      document.fonts.add(font);
+    } catch(e) { console.warn("Font load failed", e); }
+
     const W=1080, H=1920;
     const canvas = document.createElement("canvas");
     canvas.width=W; canvas.height=H;
@@ -1362,9 +1369,9 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
     c.textAlign="center"; c.fillText("FIFA WORLD CUP 2026™",W/2,100);
 
     // App name
-    c.fillStyle="#e8c84a"; c.font="900 130px Impact, sans-serif";
+    c.fillStyle="#e8c84a"; c.font="900 130px BebasNeue, Impact, sans-serif";
     c.fillText("PANINI",W/2,240);
-    c.fillStyle="#ffffff"; c.font="900 130px Impact, sans-serif";
+    c.fillStyle="#ffffff"; c.font="900 130px BebasNeue, Impact, sans-serif";
     c.fillText("TRACKER",W/2,370);
 
     // Divider
@@ -1372,7 +1379,7 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
     c.beginPath(); c.moveTo(120,420); c.lineTo(W-120,420); c.stroke();
 
     // Big % 
-    c.fillStyle="#e8c84a"; c.font="900 280px Impact, sans-serif";
+    c.fillStyle="#e8c84a"; c.font="900 280px BebasNeue, Impact, sans-serif";
     c.textAlign="center"; c.fillText(pct+"%",W/2,720);
     c.fillStyle="#ffffff99"; c.font="500 52px Inter, sans-serif";
     c.fillText("completado",W/2,790);
@@ -1381,7 +1388,7 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
     const stats = [[totalOwned,"Tengo","#22c55e"],[missing.length,"Faltan","#ef4444"],[repeatList.length,"Repetidas","#a855f7"]];
     stats.forEach(([val,label,col],i)=>{
       const x = 180 + i*360;
-      c.fillStyle=col; c.font="900 90px Impact, sans-serif";
+      c.fillStyle=col; c.font="900 90px BebasNeue, Impact, sans-serif";
       c.textAlign="center"; c.fillText(val,x,930);
       c.fillStyle="#ffffff66"; c.font="500 38px Inter, sans-serif";
       c.fillText(label.toUpperCase(),x,978);
@@ -1562,7 +1569,8 @@ export default function PaniniTracker() {
   useEffect(()=>{
     const timer = setTimeout(()=>{
       const seen = localStorage.getItem("panini_onboarding_done");
-      setShowOnboarding(!seen);
+      const hasMercado = new URLSearchParams(window.location.search).has("mercado");
+      setShowOnboarding(!seen && !hasMercado);
       setReady(true);
     }, 800);
     return ()=>clearTimeout(timer);
@@ -2249,9 +2257,35 @@ function PaniniApp() {
             {/* Progress by group */}
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
               <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
-                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por grupo</div>
+                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por sección</div>
               </div>
               <div style={{padding:"8px 16px 12px"}}>
+                {/* FWC sections */}
+                {[{key:"FWCI",label:"FWC · Intro",flag:"🌍"},{key:"FWCH",label:"FWC · Historia",flag:"🏆"}].map(({key,label,flag})=>{
+                  const sec = ALBUM.find(s=>s.key===key);
+                  if (!sec) return null;
+                  const have = sec.stickers.filter(st=>owned.has(st.id)).length;
+                  const total = sec.stickers.length;
+                  const gPct = Math.round((have/total)*100);
+                  return (
+                    <div key={key} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:4,background:"#e8c84a",flexShrink:0}}/>
+                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>{flag} {label}</span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:12,color:"#e8c84a",fontWeight:"700"}}>{gPct}%</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${gPct}%`,background:"#e8c84a",borderRadius:3,transition:"width 0.5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Groups A-L */}
                 {GROUPS.map(g=>{
                   const teamSecs = ALBUM.filter(s=>s.group===g.id);
                   const have = teamSecs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
@@ -2264,9 +2298,7 @@ function PaniniApp() {
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
                           <div style={{width:8,height:8,borderRadius:4,background:col,flexShrink:0}}/>
                           <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>Grupo {g.id}</span>
-                          <span style={{fontSize:11,color:"#404058"}}>
-                            {g.teams.map(t=>t.flag).join(" ")}
-                          </span>
+                          <span style={{fontSize:11,color:"#404058"}}>{g.teams.map(t=>t.flag).join(" ")}</span>
                         </div>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
                           <span style={{fontSize:12,color:col,fontWeight:"700"}}>{gPct}%</span>
@@ -2279,6 +2311,31 @@ function PaniniApp() {
                     </div>
                   );
                 })}
+                {/* Coca-Cola */}
+                {(()=>{
+                  const sec = ALBUM.find(s=>s.special==="cocacola");
+                  if (!sec) return null;
+                  const have = sec.stickers.filter(st=>owned.has(st.id)).length;
+                  const total = sec.stickers.length;
+                  const gPct = Math.round((have/total)*100);
+                  return (
+                    <div style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:4,background:"#e8302a",flexShrink:0}}/>
+                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>🥤 Coca-Cola</span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:12,color:"#e8302a",fontWeight:"700"}}>{gPct}%</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${gPct}%`,background:"#e8302a",borderRadius:3,transition:"width 0.5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
