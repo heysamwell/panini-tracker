@@ -2287,6 +2287,9 @@ function PaniniApp() {
               </div>
             </div>
 
+            {/* Share Card — right after progress */}
+            <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
+
             {/* Progress by group */}
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
               <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
@@ -2405,9 +2408,6 @@ function PaniniApp() {
                 </div>
               );
             })()}
-
-            {/* Share card — Instagram Story */}
-            <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
 
             {/* ── NIVEL DE SUERTE ── */}
             {(()=>{
