@@ -1238,6 +1238,145 @@ function QRMarket({ repeatList, missing }) {
   );
 }
 
+// ── Share Card (Instagram Story) ──────────────────────────────────────────────
+function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
+  const canvasRef = useRef();
+  const [imgUrl, setImgUrl] = useState(null);
+  const [generating, setGenerating] = useState(false);
+
+  const groupStats = GROUPS.map(g=>{
+    const secs = ALBUM.filter(s=>s.group===g.id);
+    const have = secs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
+    const total = secs.reduce((a,s)=>a+s.stickers.length,0);
+    return { id:g.id, pct:Math.round((have/total)*100), col:GROUP_COLORS[g.id] };
+  });
+
+  const generate = () => {
+    setGenerating(true);
+    const W=1080, H=1920;
+    const canvas = document.createElement("canvas");
+    canvas.width=W; canvas.height=H;
+    const c = canvas.getContext("2d");
+
+    // Background
+    const bg = c.createLinearGradient(0,0,W,H);
+    bg.addColorStop(0,"#08081a"); bg.addColorStop(0.5,"#0a1030"); bg.addColorStop(1,"#080810");
+    c.fillStyle=bg; c.fillRect(0,0,W,H);
+
+    // Gold accent line top
+    c.fillStyle="#e8c84a"; c.fillRect(0,0,W,6);
+
+    // FIFA WC label
+    c.fillStyle="#e8c84a88"; c.font="500 42px Inter, sans-serif";
+    c.textAlign="center"; c.fillText("FIFA WORLD CUP 2026™",W/2,100);
+
+    // App name
+    c.fillStyle="#e8c84a"; c.font="900 130px Impact, sans-serif";
+    c.fillText("PANINI",W/2,240);
+    c.fillStyle="#ffffff"; c.font="900 130px Impact, sans-serif";
+    c.fillText("TRACKER",W/2,370);
+
+    // Divider
+    c.strokeStyle="#e8c84a44"; c.lineWidth=2;
+    c.beginPath(); c.moveTo(120,420); c.lineTo(W-120,420); c.stroke();
+
+    // Big % 
+    c.fillStyle="#e8c84a"; c.font="900 280px Impact, sans-serif";
+    c.textAlign="center"; c.fillText(pct+"%",W/2,720);
+    c.fillStyle="#ffffff99"; c.font="500 52px Inter, sans-serif";
+    c.fillText("completado",W/2,790);
+
+    // Stats row
+    const stats = [[totalOwned,"Tengo","#22c55e"],[missing.length,"Faltan","#ef4444"],[repeatList.length,"Repito","#a855f7"]];
+    stats.forEach(([val,label,col],i)=>{
+      const x = 180 + i*360;
+      c.fillStyle=col; c.font="900 90px Impact, sans-serif";
+      c.textAlign="center"; c.fillText(val,x,930);
+      c.fillStyle="#ffffff66"; c.font="500 38px Inter, sans-serif";
+      c.fillText(label.toUpperCase(),x,978);
+    });
+
+    // Progress bar total
+    const bx=100, by=1030, bw=W-200, bh=18;
+    c.fillStyle="#1a1a2a"; c.beginPath(); c.roundRect(bx,by,bw,bh,9); c.fill();
+    const pg = c.createLinearGradient(bx,0,bx+bw,0);
+    pg.addColorStop(0,"#e8c84a"); pg.addColorStop(1,"#f09820");
+    c.fillStyle=pg; c.beginPath(); c.roundRect(bx,by,bw*(pct/100),bh,9); c.fill();
+
+    // Group bars
+    c.fillStyle="#ffffff"; c.font="600 36px Inter, sans-serif";
+    c.textAlign="left"; c.fillText("PROGRESO POR GRUPO",100,1110);
+    groupStats.forEach((g,i)=>{
+      const row = Math.floor(i/2), col2 = i%2;
+      const gx=100+col2*490, gy=1150+row*80;
+      const gw=420, gh=14;
+      // Label
+      c.fillStyle="#ffffff99"; c.font="500 30px Inter, sans-serif";
+      c.textAlign="left"; c.fillText(`Grupo ${g.id}`,gx,gy+10);
+      c.fillStyle=g.col; c.font="700 30px Inter, sans-serif";
+      c.textAlign="right"; c.fillText(g.pct+"%",gx+gw,gy+10);
+      // Bar bg
+      c.fillStyle="#1a1a2a"; c.beginPath(); c.roundRect(gx,gy+16,gw,gh,7); c.fill();
+      // Bar fill
+      c.fillStyle=g.col; c.beginPath(); c.roundRect(gx,gy+16,gw*(g.pct/100),gh,7); c.fill();
+    });
+
+    // Bottom divider
+    c.strokeStyle="#e8c84a44"; c.lineWidth=2;
+    c.beginPath(); c.moveTo(120,1800); c.lineTo(W-120,1800); c.stroke();
+
+    // Footer
+    c.fillStyle="#e8c84a99"; c.font="500 38px Inter, sans-serif";
+    c.textAlign="center"; c.fillText("Hey Samwell · panini-tracker-flame.vercel.app",W/2,1860);
+
+    // Gold line bottom
+    c.fillStyle="#e8c84a"; c.fillRect(0,H-6,W,6);
+
+    setImgUrl(canvas.toDataURL("image/png"));
+    setGenerating(false);
+  };
+
+  return (
+    <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:14,padding:16,marginBottom:14}}>
+      <div style={{fontSize:14,fontWeight:"700",marginBottom:4}}>📸 Share Card para Instagram</div>
+      <div style={{fontSize:12,color:"#505068",marginBottom:12,lineHeight:1.6}}>
+        Genera una imagen de tu progreso lista para Stories o WhatsApp.
+      </div>
+
+      {!imgUrl && (
+        <button onClick={generate} disabled={generating}
+          style={{width:"100%",padding:"12px 0",background:"linear-gradient(135deg,#1a1428,#0e0818)",
+            border:"1px solid #8040a0",borderRadius:10,color:"#c080f0",cursor:generating?"not-allowed":"pointer",
+            fontSize:14,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+          {generating?<><div style={{width:16,height:16,border:"2px solid #c080f022",borderTop:"2px solid #c080f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Generando…</>:"✨ Generar imagen"}
+        </button>
+      )}
+
+      {imgUrl && (
+        <div>
+          {/* Preview */}
+          <div style={{borderRadius:10,overflow:"hidden",marginBottom:10,border:"1px solid #2a2a40"}}>
+            <img src={imgUrl} style={{width:"100%",display:"block"}} alt="Share card preview"/>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <a href={imgUrl} download="mi-progreso-panini.png"
+              style={{flex:1,padding:"11px 0",background:"linear-gradient(135deg,#1a1428,#0e0818)",
+                border:"1px solid #8040a0",borderRadius:10,color:"#c080f0",cursor:"pointer",
+                fontSize:13,fontFamily:BODY,fontWeight:"600",textAlign:"center",textDecoration:"none",display:"block"}}>
+              ⬇ Guardar imagen
+            </a>
+            <button onClick={()=>setImgUrl(null)}
+              style={{flex:1,padding:"11px 0",background:"#0a0a14",border:"1px solid #1a1a28",
+                borderRadius:10,color:"#405060",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
+              ↺ Regenerar
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Onboarding ────────────────────────────────────────────────────────────────
 const ONBOARDING_SLIDES = [
   {
@@ -1981,29 +2120,8 @@ function PaniniApp() {
               );
             })()}
 
-            {/* Share card */}
-            <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:14,padding:16,marginBottom:14}}>
-              <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Compartir mi progreso</div>
-              <div style={{fontSize:12,color:"#505068",marginBottom:12}}>Copia este texto para postear en WhatsApp o Instagram</div>
-              <div style={{background:"#080810",border:"1px solid #1a1a2a",borderRadius:10,padding:12,marginBottom:10,fontSize:12,color:"#a0a0c0",lineHeight:1.7}}>
-                ⚽ Mi progreso Panini WC2026{"\n"}
-                📊 {pct}% completado ({owned.size}/{TOTAL}){"\n"}
-                ✅ Tengo: {owned.size} | ❌ Faltan: {missing.length} | 🔄 Repetidas: {repeatList.length}{"\n"}
-                🏆 Top grupo: {(()=>{const g=GROUPS.map(g=>{const s=ALBUM.filter(s=>s.group===g.id);const h=s.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);const t=s.reduce((a,s)=>a+s.stickers.length,0);return{id:g.id,pct:Math.round((h/t)*100)};}).sort((a,b)=>b.pct-a.pct)[0];return g?`Grupo ${g.id} (${g.pct}%)`:"—";})()}{"\n"}
-                📱 panini-tracker-flame.vercel.app
-              </div>
-              <button onClick={()=>{
-                const top = GROUPS.map(g=>{const s=ALBUM.filter(s=>s.group===g.id);const h=s.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);const t=s.reduce((a,s)=>a+s.stickers.length,0);return{id:g.id,pct:Math.round((h/t)*100)};}).sort((a,b)=>b.pct-a.pct)[0];
-                navigator.clipboard?.writeText(
-                  `⚽ Mi progreso Panini WC2026\n📊 ${pct}% completado (${owned.size}/${TOTAL})\n✅ Tengo: ${owned.size} | ❌ Faltan: ${missing.length} | 🔄 Repetidas: ${repeatList.length}\n🏆 Top grupo: Grupo ${top?.id} (${top?.pct}%)\n📱 panini-tracker-flame.vercel.app`
-                );
-              }}
-                style={{width:"100%",padding:"11px 0",background:"linear-gradient(135deg,#1a1a3a,#141428)",
-                  border:"1px solid #4040a0",borderRadius:10,color:"#8090d0",cursor:"pointer",
-                  fontSize:13,fontFamily:"inherit",fontWeight:"600"}}>
-                ⎘ Copiar para compartir
-              </button>
-            </div>
+            {/* Share card — Instagram Story */}
+            <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
 
             {/* Export / Import */}
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
