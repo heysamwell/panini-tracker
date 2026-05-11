@@ -2217,19 +2217,19 @@ function PaniniApp() {
         {/* ══ FALTAN ══ */}
         {tab==="faltantes"&&(
           <div className="tab-content">
-            {/* Header */}
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-              <div>
-                <div style={{fontSize:40,fontWeight:"400",color:"#ef4444",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{missing.length}</div>
-                <div style={{fontSize:11,color:"#505060",textTransform:"uppercase",letterSpacing:1,marginTop:2}}>figuritas faltantes</div>
+            {/* Header stats */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+              <div style={{background:"#0e0e1a",border:"1px solid #5a2020",borderRadius:12,padding:14,textAlign:"center"}}>
+                <div style={{fontSize:36,fontWeight:"400",color:"#ef4444",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{missing.length}</div>
+                <div style={{fontSize:11,color:"#505060",textTransform:"uppercase",letterSpacing:1,marginTop:4}}>Faltantes</div>
               </div>
-              <div style={{display:"flex",gap:6}}>
+              <div style={{background:"#0e0e1a",border:"1px solid #1a2a3a",borderRadius:12,padding:14,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center",gap:6}}>
                 <button onClick={()=>{ const lines=Object.entries(missingByTeam).map(([c,ids])=>`${c}: ${ids.map(id=>id.replace(c,"")).join(" ")}`).join("\n"); navigator.clipboard?.writeText(`Faltan ${missing.length}:\n\n${lines}`); setShareMsg(true); setTimeout(()=>setShareMsg(false),2500); }}
-                  style={{padding:"8px 14px",background:"#0e0e28",border:"1px solid #303080",borderRadius:8,color:shareMsg?"#50d0a0":"#6070c0",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600"}}>
-                  {shareMsg?"✓ Copiado":"⎘ Copiar"}
+                  style={{padding:"7px 0",background:"#0e0e28",border:"1px solid #303080",borderRadius:8,color:shareMsg?"#50d0a0":"#6070c0",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600"}}>
+                  {shareMsg?"✓ Copiado":"⎘ Copiar lista"}
                 </button>
                 <button onClick={handlePDF} disabled={pdfLoading}
-                  style={{padding:"8px 14px",background:"#1a1020",border:"1px solid #6040a0",borderRadius:8,color:pdfLoading?"#504060":"#c090f0",cursor:pdfLoading?"not-allowed":"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",gap:6}}>
+                  style={{padding:"7px 0",background:"#1a1020",border:"1px solid #6040a0",borderRadius:8,color:pdfLoading?"#504060":"#c090f0",cursor:pdfLoading?"not-allowed":"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                   {pdfLoading?<><div style={{width:12,height:12,border:"2px solid #50407044",borderTop:"2px solid #c090f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>PDF</>:<>📄 PDF</>}
                 </button>
               </div>
