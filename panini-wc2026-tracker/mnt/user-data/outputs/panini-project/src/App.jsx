@@ -1,5 +1,10 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
+import { createClient } from "@supabase/supabase-js";
+
+const SUPABASE_URL = "https://nvllmcwwektkvgbargzh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_XPfvLzBKz-L_JEKfmw1pIw_aShQ3Ewf";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Inline SVG icons — no external dependency needed
 const IconBook    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>;
@@ -1238,6 +1243,60 @@ function QRMarket({ repeatList, missing }) {
   );
 }
 
+// ── Login Form ────────────────────────────────────────────────────────────────
+function LoginForm({ signIn, authLoading }) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const [err, setErr] = useState("");
+
+  const handleSubmit = async () => {
+    if (!email.includes("@")) { setErr("Email inválido"); return; }
+    setErr("");
+    const error = await signIn(email);
+    if (error) setErr(error.message);
+    else setSent(true);
+  };
+
+  if (sent) return (
+    <div style={{textAlign:"center",padding:"8px 0"}}>
+      <div style={{fontSize:32,marginBottom:8}}>📬</div>
+      <div style={{fontSize:14,fontWeight:"600",color:"#50d0a0",marginBottom:6}}>¡Revisa tu email!</div>
+      <div style={{fontSize:12,color:"#506060",lineHeight:1.6}}>
+        Te mandamos un link mágico a <strong style={{color:"#a0c0b0"}}>{email}</strong>. Ábrelo para iniciar sesión.
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <div style={{fontSize:13,color:"#506070",lineHeight:1.6,marginBottom:14}}>
+        Inicia sesión para guardar tu progreso en la nube y accederlo desde cualquier dispositivo.
+      </div>
+      <input value={email} onChange={e=>setEmail(e.target.value)}
+        placeholder="tu@email.com"
+        type="email"
+        style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:8,
+          color:"#e0d8f0",fontSize:14,padding:"10px 12px",boxSizing:"border-box",
+          fontFamily:BODY,outline:"none",marginBottom:8}}/>
+      {err && <div style={{fontSize:12,color:"#c05050",marginBottom:8}}>{err}</div>}
+      <button onClick={handleSubmit} disabled={authLoading}
+        style={{width:"100%",padding:"12px 0",
+          background:"linear-gradient(135deg,#1a1428,#0e0818)",
+          border:"1px solid #6040a0",borderRadius:10,
+          color:"#c080f0",cursor:authLoading?"not-allowed":"pointer",
+          fontSize:14,fontFamily:BODY,fontWeight:"600",
+          display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+        {authLoading
+          ? <><div style={{width:16,height:16,border:"2px solid #c080f022",borderTop:"2px solid #c080f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Enviando…</>
+          : "✉️ Enviar link mágico"}
+      </button>
+      <div style={{fontSize:11,color:"#303040",textAlign:"center",marginTop:8}}>
+        Sin contraseña — solo un link en tu email
+      </div>
+    </div>
+  );
+}
+
 // ── Share Card (Instagram Story) ──────────────────────────────────────────────
 function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
   const canvasRef = useRef();
@@ -1508,7 +1567,64 @@ function PaniniApp() {
   const [repeated, setRepeated] = useState(()=>loadData().repeated);
   const [tab, setTab] = useState("album");
   const [showTrade, setShowTrade] = useState(false);
-  const [friendData, setFriendData] = useState(null); // preloaded from URL
+  const [friendData, setFriendData] = useState(null);
+
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const syncTimeout = useRef(null);
+
+  // Listen to auth changes
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data:{session}})=> setUser(session?.user ?? null));
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
+      setUser(session?.user ?? null);
+      if (session?.user) loadFromCloud(session.user.id);
+    });
+    return ()=>subscription.unsubscribe();
+  },[]);
+
+  // Load from cloud
+  const loadFromCloud = async (userId) => {
+    const {data} = await supabase.from("albums").select("owned,repeated").eq("user_id",userId).single();
+    if (data) {
+      setOwned(new Set(data.owned||[]));
+      setRepeated(data.repeated||{});
+    }
+  };
+
+  // Save to cloud (debounced)
+  const saveToCloud = useCallback((newOwned, newRepeated) => {
+    if (!user) return;
+    clearTimeout(syncTimeout.current);
+    syncTimeout.current = setTimeout(async ()=>{
+      setSyncing(true);
+      await supabase.from("albums").upsert({
+        user_id: user.id,
+        owned: [...newOwned],
+        repeated: newRepeated,
+        updated_at: new Date().toISOString(),
+      }, {onConflict:"user_id"});
+      setSyncing(false);
+    }, 1500);
+  },[user]);
+
+  // Sign in with email magic link
+  const signIn = async (email) => {
+    setAuthLoading(true);
+    const {error} = await supabase.auth.signInWithOtp({
+      email,
+      options:{emailRedirectTo: window.location.origin}
+    });
+    setAuthLoading(false);
+    return error;
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   // On mount: check if URL has ?mercado= param
   useEffect(()=>{
@@ -1519,7 +1635,6 @@ function PaniniApp() {
       if (decoded) {
         setFriendData(decoded);
         setTab("cambios");
-        // Clean URL without reloading
         window.history.replaceState({}, "", window.location.pathname);
       }
     }
@@ -1537,7 +1652,13 @@ function PaniniApp() {
     setTimeout(()=>setToast(null), 3500);
   };
 
-  useEffect(()=>{ saveData(owned,repeated); setSavedPulse(true); const t=setTimeout(()=>setSavedPulse(false),1200); return()=>clearTimeout(t); },[owned,repeated]);
+  useEffect(()=>{
+    saveData(owned,repeated);
+    saveToCloud(owned,repeated);
+    setSavedPulse(true);
+    const t=setTimeout(()=>setSavedPulse(false),1200);
+    return()=>clearTimeout(t);
+  },[owned,repeated]);
 
   const toggle = useCallback(id => {
     setOwned(p=>{
@@ -1695,7 +1816,8 @@ function PaniniApp() {
               <div style={{fontSize:28,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>Panini Tracker</div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
-              {savedPulse&&<div style={{fontSize:14,color:"#60b060",letterSpacing:1}}>💾</div>}
+              {syncing && <div style={{fontSize:11,color:"#6090d0",letterSpacing:1}}>☁️</div>}
+              {savedPulse && !syncing && <div style={{fontSize:11,color:"#60b060",letterSpacing:1}}>💾</div>}
               <div style={{textAlign:"right"}}>
                 <div style={{fontSize:32,fontWeight:"400",color:"#e8c84a",lineHeight:1,fontFamily:DISPLAY,letterSpacing:2}}>{pct}%</div>
                 <div style={{fontSize:15,color:"#707090"}}>{totalOwned}/{TOTAL}</div>
@@ -1833,80 +1955,106 @@ function PaniniApp() {
                 📥 Importar
               </button>
             </div>
-            {/* Reset */}
-            <button onClick={()=>{
-              if(window.confirm("¿Empezar desde cero? Se borrará todo tu progreso y repetidas.")) {
-                setOwned(new Set());
-                setRepeated({});
-              }
-            }} style={{width:"100%",marginTop:8,padding:"10px 0",background:"#1a0808",border:"1px solid #5a2020",borderRadius:10,color:"#c05050",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
-              🗑 Empezar desde cero
-            </button>
           </div>
         )}
 
         {/* ══ ACERCA ══ */}
         {tab==="about"&&(
-          <div style={{paddingTop:8}}>
-            {/* Hero card */}
-            <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:24,marginBottom:14,textAlign:"center"}}>
-              <div style={{fontSize:48,marginBottom:12}}>⚽</div>
-              <div style={{fontSize:32,fontWeight:"400",color:"#e8c84a",letterSpacing:3,fontFamily:DISPLAY,lineHeight:1,marginBottom:4}}>Panini Tracker</div>
-              <div style={{fontSize:13,color:"#606078",marginBottom:16,fontFamily:BODY}}>FIFA World Cup 2026™</div>
-              <div style={{width:48,height:2,background:"#e8c84a33",margin:"0 auto 16px"}}/>
-              <div style={{fontSize:14,color:"#9090b0",lineHeight:1.7}}>
-                Hecho por
-              </div>
-              <div style={{fontSize:22,fontWeight:"900",color:"#e0d8f0",marginTop:4,marginBottom:8}}>Hey Samwell</div>
+          <div className="tab-content" style={{paddingTop:8}}>
+
+            {/* ── LOGIN / PERFIL ── */}
+            <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:20,marginBottom:12}}>
+              <div style={{fontSize:11,color:"#404058",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Cuenta</div>
+
+              {!user ? (
+                /* Not logged in */
+                <LoginForm signIn={signIn} authLoading={authLoading}/>
+              ) : (
+                /* Logged in */
+                <div>
+                  <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+                    <div style={{width:44,height:44,borderRadius:22,background:"linear-gradient(135deg,#e8c84a,#f09820)",
+                      display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,fontWeight:"bold",color:"#080810"}}>
+                      {(user.email||"?")[0].toUpperCase()}
+                    </div>
+                    <div>
+                      <div style={{fontSize:14,fontWeight:"600",color:"#e0d8f0"}}>{user.email}</div>
+                      <div style={{fontSize:11,color:"#50d0a0",marginTop:2}}>☁️ Sincronizado en la nube</div>
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    <button onClick={()=>{
+                      if(window.confirm("¿Subir tu progreso local a la nube? Esto reemplazará los datos guardados en tu cuenta.")) {
+                        saveToCloud(owned, repeated);
+                      }
+                    }} style={{flex:1,padding:"9px 0",background:"#0a1a10",border:"1px solid #2a5a38",
+                      borderRadius:10,color:"#50d0a0",cursor:"pointer",fontSize:12,fontFamily:BODY}}>
+                      ⬆ Subir local
+                    </button>
+                    <button onClick={signOut}
+                      style={{flex:1,padding:"9px 0",background:"#1a0a0a",border:"1px solid #5a2020",
+                        borderRadius:10,color:"#c05050",cursor:"pointer",fontSize:12,fontFamily:BODY}}>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── CONFIGURACIÓN ── */}
+            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:12}}>
+              <div style={{fontSize:11,color:"#404058",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Configuración</div>
+
+              {/* Reset onboarding */}
+              <button onClick={()=>{
+                localStorage.removeItem("panini_onboarding_done");
+                window.location.reload();
+              }} style={{width:"100%",padding:"11px 0",background:"#0a0a14",border:"1px solid #2a2a40",
+                borderRadius:10,color:"#6070a0",cursor:"pointer",fontSize:13,fontFamily:BODY,marginBottom:8,textAlign:"left",paddingLeft:14}}>
+                🎓 Ver tutorial de nuevo
+              </button>
+
+              {/* Reset all */}
+              <button onClick={()=>{
+                if(window.confirm("¿Empezar desde cero? Se borrará todo tu progreso y repetidas.")) {
+                  setOwned(new Set()); setRepeated({});
+                }
+              }} style={{width:"100%",padding:"11px 0",background:"#1a0808",border:"1px solid #5a2020",
+                borderRadius:10,color:"#c05050",cursor:"pointer",fontSize:13,fontFamily:BODY,textAlign:"left",paddingLeft:14}}>
+                🗑 Empezar desde cero
+              </button>
+            </div>
+
+            {/* ── ACERCA ── */}
+            <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:20,marginBottom:12,textAlign:"center"}}>
+              <div style={{fontSize:11,color:"#404058",letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>Acerca de</div>
+              <div style={{fontSize:48,marginBottom:8}}>⚽</div>
+              <div style={{fontSize:28,fontWeight:"400",color:"#e8c84a",letterSpacing:3,fontFamily:DISPLAY,lineHeight:1,marginBottom:4}}>Panini Tracker</div>
+              <div style={{fontSize:12,color:"#606078",marginBottom:16}}>FIFA World Cup 2026™ · v1.0</div>
+              <div style={{fontSize:13,color:"#9090b0",marginBottom:16}}>Hecho con ❤️ por <strong style={{color:"#e0d8f0"}}>Hey Samwell</strong></div>
               <a href="https://instagram.com/hey_samwell" target="_blank" rel="noopener noreferrer"
-                style={{display:"inline-flex",alignItems:"center",gap:6,padding:"7px 14px",
+                style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 16px",
                   background:"linear-gradient(135deg,#833ab4,#fd1d1d,#f77737)",
-                  borderRadius:20,color:"#fff",fontSize:13,fontWeight:"600",textDecoration:"none"}}>
-                <span>📸</span> @hey_samwell
+                  borderRadius:20,color:"#fff",fontSize:13,fontWeight:"600",textDecoration:"none",marginBottom:12}}>
+                📸 @hey_samwell
               </a>
             </div>
 
-            {/* Coffee / donation */}
-            <div style={{background:"linear-gradient(135deg,#1a1008,#120c04)",border:"1px solid #6040108",borderRadius:14,padding:20,marginBottom:14,textAlign:"center"}}>
-              <div style={{fontSize:32,marginBottom:10}}>☕</div>
-              <div style={{fontSize:16,fontWeight:"bold",color:"#f0b840",marginBottom:8}}>¿Te fue útil el tracker?</div>
-              <div style={{fontSize:13,color:"#806040",lineHeight:1.7,marginBottom:16}}>
-                Si te ayudó a completar tu álbum o simplemente te gustó, puedes invitarme un café. Cada granito de arena ayuda a seguir haciendo cositas.
+            {/* ── DONACIÓN ── */}
+            <div style={{background:"linear-gradient(135deg,#1a1008,#120c04)",border:"1px solid #3a2808",borderRadius:14,padding:18,marginBottom:12,textAlign:"center"}}>
+              <div style={{fontSize:28,marginBottom:8}}>☕</div>
+              <div style={{fontSize:15,fontWeight:"bold",color:"#f0b840",marginBottom:8}}>¿Te fue útil el tracker?</div>
+              <div style={{fontSize:13,color:"#806040",lineHeight:1.7,marginBottom:14}}>
+                Invítame un café si te ayudó a completar tu álbum.
               </div>
               <a href="https://paypal.me/awesombroso" target="_blank" rel="noopener noreferrer"
-                style={{display:"inline-block",padding:"13px 28px",
+                style={{display:"inline-block",padding:"12px 24px",
                   background:"linear-gradient(135deg,#003087,#009cde)",
-                  borderRadius:12,color:"#fff",fontSize:15,fontWeight:"bold",
-                  textDecoration:"none",letterSpacing:0.3}}>
-                ☕ Invitar un café vía PayPal
+                  borderRadius:12,color:"#fff",fontSize:14,fontWeight:"bold",textDecoration:"none"}}>
+                ☕ Invitar un café
               </a>
             </div>
 
-            {/* Stats summary */}
-            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
-              <div style={{fontSize:11,color:"#404058",letterSpacing:2,textTransform:"uppercase",marginBottom:12}}>Tu progreso</div>
-              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,textAlign:"center"}}>
-                {[
-                  [owned.size, "Tengo", "#70c070"],
-                  [missing.length, "Faltan", "#c05050"],
-                  [repeatList.length, "Repet.", "#a080e0"],
-                ].map(([val,label,color])=>(
-                  <div key={label}>
-                    <div style={{fontSize:24,fontWeight:"900",color}}>{val}</div>
-                    <div style={{fontSize:11,color:"#404058",marginTop:2}}>{label}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{marginTop:12,height:5,background:"#111120",borderRadius:3,overflow:"hidden"}}>
-                <div style={{height:"100%",width:`${pct}%`,background:"linear-gradient(90deg,#e8c84a,#f09820)",borderRadius:3,transition:"width 0.5s"}}/>
-              </div>
-              <div style={{textAlign:"center",marginTop:6,fontSize:12,color:"#e8c84a",fontWeight:"bold"}}>{pct}% completado</div>
-            </div>
-
-            {/* Version */}
-            <div style={{textAlign:"center",padding:"16px 0",fontSize:11,color:"#252535"}}>
-              v1.0 · Hecho por Hey Samwell 🇲🇽
-            </div>
           </div>
         )}
 
