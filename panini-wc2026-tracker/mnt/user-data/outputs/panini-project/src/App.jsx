@@ -1212,7 +1212,129 @@ function QRMarket({ repeatList, missing }) {
   );
 }
 
+// ── Onboarding ────────────────────────────────────────────────────────────────
+const ONBOARDING_SLIDES = [
+  {
+    emoji:"⚽",
+    title:"Bienvenido al\nPanini Tracker",
+    desc:"Lleva el control de tu álbum FIFA World Cup 2026™ de forma fácil y rápida.",
+    color:"#e8c84a",
+  },
+  {
+    emoji:"👆",
+    title:"Marca tus\nfiguritas",
+    desc:"Tap en cualquier cajita para marcarla como tuya. Se pone verde. Tap de nuevo para desmarcar.",
+    color:"#22c55e",
+  },
+  {
+    emoji:"🔁",
+    title:"Registra\nrepetidas",
+    desc:"Cuando ya tienes una figurita, toca la barrita \"+ repetida\" para registrar cuántas copias de más tienes.",
+    color:"#a855f7",
+  },
+  {
+    emoji:"🔄",
+    title:"Intercambia\ncon amigos",
+    desc:"En el tab Cambios genera tu QR. Tu amigo lo escanea y ven al instante qué figuritas pueden intercambiar.",
+    color:"#50d0a0",
+  },
+];
+
+function Onboarding({ onDone }) {
+  const [slide, setSlide] = useState(0);
+  const cur = ONBOARDING_SLIDES[slide];
+  const isLast = slide === ONBOARDING_SLIDES.length - 1;
+
+  return (
+    <div style={{position:"fixed",inset:0,background:"#080810",zIndex:500,
+      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+      padding:24,fontFamily:BODY}}>
+
+      {/* Progress dots */}
+      <div style={{display:"flex",gap:8,marginBottom:40}}>
+        {ONBOARDING_SLIDES.map((_,i)=>(
+          <div key={i} style={{width: i===slide ? 24 : 8, height:8, borderRadius:4,
+            background: i===slide ? cur.color : "#252535",
+            transition:"all 0.3s ease"}}/>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div key={slide} style={{textAlign:"center",maxWidth:320,animation:"fadeIn 0.35s ease"}}>
+        <div style={{fontSize:72,marginBottom:24,lineHeight:1}}>{cur.emoji}</div>
+        <div style={{fontSize:32,fontWeight:"400",fontFamily:DISPLAY,letterSpacing:1,
+          color:cur.color,lineHeight:1.1,marginBottom:16,whiteSpace:"pre-line"}}>
+          {cur.title}
+        </div>
+        <div style={{fontSize:15,color:"#707088",lineHeight:1.7}}>{cur.desc}</div>
+      </div>
+
+      {/* Buttons */}
+      <div style={{position:"absolute",bottom:48,left:24,right:24,display:"flex",gap:10}}>
+        {slide > 0 && (
+          <button onClick={()=>setSlide(s=>s-1)}
+            style={{flex:1,padding:"14px 0",background:"#0e0e1a",border:"1px solid #2a2a3a",
+              borderRadius:12,color:"#606070",cursor:"pointer",fontSize:15,fontFamily:BODY}}>
+            Atrás
+          </button>
+        )}
+        <button onClick={()=>isLast ? onDone() : setSlide(s=>s+1)}
+          style={{flex:2,padding:"14px 0",
+            background:`linear-gradient(135deg,${cur.color}33,${cur.color}18)`,
+            border:`1.5px solid ${cur.color}`,borderRadius:12,
+            color:cur.color,cursor:"pointer",fontSize:15,fontFamily:BODY,fontWeight:"700"}}>
+          {isLast ? "¡Empezar! 🚀" : "Siguiente →"}
+        </button>
+      </div>
+
+      {/* Skip */}
+      {!isLast && (
+        <button onClick={onDone}
+          style={{position:"absolute",top:52,right:24,background:"none",border:"none",
+            color:"#404050",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
+          Saltar
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function PaniniTracker() {
+  const [ready, setReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(()=>{
+    // Simulate brief load then check if first time
+    const timer = setTimeout(()=>{
+      const seen = localStorage.getItem("panini_onboarding_done");
+      setShowOnboarding(!seen);
+      setReady(true);
+    }, 800);
+    return ()=>clearTimeout(timer);
+  }, []);
+
+  const finishOnboarding = () => {
+    localStorage.setItem("panini_onboarding_done","1");
+    setShowOnboarding(false);
+  };
+
+  if (!ready) return (
+    <div style={{minHeight:"100vh",background:"#080810",display:"flex",flexDirection:"column",
+      alignItems:"center",justifyContent:"center",fontFamily:BODY}}>
+      <div style={{fontSize:56,marginBottom:16}}>⚽</div>
+      <div style={{fontSize:28,fontWeight:"400",color:"#e8c84a",fontFamily:DISPLAY,letterSpacing:3,marginBottom:6}}>
+        PANINI TRACKER
+      </div>
+      <div style={{fontSize:13,color:"#404058",marginBottom:32}}>FIFA World Cup 2026™</div>
+      <div style={{width:48,height:4,background:"#1a1a2a",borderRadius:2,overflow:"hidden"}}>
+        <div style={{height:"100%",width:"40%",background:"#e8c84a",borderRadius:2,
+          animation:"loadSlide 1s infinite alternate"}}/>
+      </div>
+      <style>{`@keyframes loadSlide{from{transform:translateX(0)}to{transform:translateX(150%)}}`}</style>
+    </div>
+  );
+
+  if (showOnboarding) return <Onboarding onDone={finishOnboarding}/>;
   const [owned,    setOwned]    = useState(()=>new Set(loadData().owned));
   const [repeated, setRepeated] = useState(()=>loadData().repeated);
   const [tab, setTab] = useState("album");
