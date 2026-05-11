@@ -2376,6 +2376,111 @@ function PaniniApp() {
             {/* Share card — Instagram Story */}
             <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
 
+            {/* ── NIVEL DE SUERTE ── */}
+            {(()=>{
+              const totalCopies = Object.values(repeated).reduce((a,v)=>a+v,0);
+              const totalStickers = owned.size + totalCopies;
+              const ratio = totalStickers > 0 ? owned.size / totalStickers : 1;
+
+              // Rare cards bonus
+              const RARE = [
+                {id:"FWC0",  label:"FWC00",      emoji:"⭐", note:"La legendaria — 1 en miles"},
+                {id:"ARG17", label:"Messi",       emoji:"🐐", note:"Argentina · ARG17"},
+                {id:"POR15", label:"Ronaldo",     emoji:"🔴", note:"Portugal · POR15"},
+                {id:"FRA20", label:"Mbappé",      emoji:"⚡", note:"Francia · FRA20"},
+                {id:"ESP15", label:"Yamal",       emoji:"🌟", note:"España · ESP15"},
+                {id:"CC1",   label:"Yamal CC",    emoji:"🥤", note:"Coca-Cola · CC1"},
+                {id:"NOR15", label:"Haaland",     emoji:"🪨", note:"Noruega · NOR15"},
+                {id:"BRA14", label:"Vinicius Jr", emoji:"🇧🇷", note:"Brasil · BRA14"},
+                {id:"ENG15", label:"Bellingham",  emoji:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", note:"Inglaterra · ENG15"},
+                {id:"MEX17", label:"R. Jiménez",  emoji:"🇲🇽", note:"México · MEX17"},
+              ];
+              const rareOwned = RARE.filter(r=>owned.has(r.id));
+              const rareBonusPct = rareOwned.length * 3;
+              const luckScore = Math.min(100, Math.round(ratio * 100) + rareBonusPct);
+
+              const levels = [
+                {min:90, emoji:"🍀", label:"Legendario",    color:"#e8c84a", msg:"El Panini te ama. Naciste con suerte."},
+                {min:75, emoji:"⭐", label:"Muy suertudo",  color:"#22c55e", msg:"Claramente tienes algún truco. Bien jugado."},
+                {min:60, emoji:"😊", label:"Normal",         color:"#3b82f6", msg:"Ni muy buena ni muy mala. La vida promedio del coleccionista."},
+                {min:45, emoji:"😅", label:"Mala suerte",   color:"#f97316", msg:"Los sobres te están trolleando. Sigue intentando."},
+                {min:0,  emoji:"💀", label:"El universo te odia", color:"#ef4444", msg:"Tantas repetidas... ¿estás bien? ¿necesitas un abrazo?"},
+              ];
+              const level = levels.find(l=>luckScore>=l.min) || levels[levels.length-1];
+
+              return (
+                <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:`2px solid ${level.color}44`,borderRadius:14,padding:18,marginBottom:14}}>
+                  <div style={{fontSize:13,color:"#606078",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"600"}}>🎲 Nivel de suerte</div>
+
+                  {/* Score circle */}
+                  <div style={{display:"flex",alignItems:"center",gap:16,marginBottom:14}}>
+                    <div style={{position:"relative",width:80,height:80,flexShrink:0}}>
+                      <svg width="80" height="80" style={{transform:"rotate(-90deg)"}}>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#1a1a2a" strokeWidth="8"/>
+                        <circle cx="40" cy="40" r="32" fill="none" stroke={level.color} strokeWidth="8"
+                          strokeDasharray={`${2*Math.PI*32*luckScore/100} ${2*Math.PI*32}`}
+                          strokeLinecap="round"/>
+                      </svg>
+                      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
+                        <div style={{fontSize:22,lineHeight:1}}>{level.emoji}</div>
+                      </div>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:22,fontWeight:"400",color:level.color,fontFamily:DISPLAY,letterSpacing:2,lineHeight:1,marginBottom:4}}>
+                        {level.label.toUpperCase()}
+                      </div>
+                      <div style={{fontSize:12,color:"#606078",lineHeight:1.5}}>{level.msg}</div>
+                    </div>
+                  </div>
+
+                  {/* Bar */}
+                  <div style={{height:8,background:"#111120",borderRadius:4,overflow:"hidden",marginBottom:8}}>
+                    <div style={{height:"100%",width:`${luckScore}%`,background:`linear-gradient(90deg,${level.color}88,${level.color})`,borderRadius:4,transition:"width 0.8s ease"}}/>
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#404058",marginBottom:12}}>
+                    <span>Score: {luckScore}/100</span>
+                    <span>{owned.size} únicas · {totalCopies} copias de más</span>
+                  </div>
+
+                  {/* Rare cards */}
+                  {totalStickers > 0 && (
+                    <div style={{background:"#080810",borderRadius:10,padding:10}}>
+                      <div style={{fontSize:11,color:"#505068",marginBottom:8,letterSpacing:1,textTransform:"uppercase"}}>
+                        Cromos raros encontrados {rareOwned.length}/{RARE.length}
+                      </div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+                        {RARE.map(r=>{
+                          const has = owned.has(r.id);
+                          const isLegend = r.id==="FWC0";
+                          return (
+                            <div key={r.id} title={r.note} style={{padding:"4px 8px",borderRadius:6,fontSize:11,fontWeight:"600",
+                              background: has ? (isLegend?"#2a1a00":"#0a1a10") : "#111120",
+                              border: has ? (isLegend?"1px solid #e8c84a":"1px solid #2a5a38") : "1px solid #1a1a2a",
+                              color: has ? (isLegend?"#e8c84a":"#50d0a0") : "#303040",
+                              display:"flex",alignItems:"center",gap:4}}>
+                              <span style={{fontSize:13}}>{r.emoji}</span>
+                              <span>{r.label}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {rareOwned.length > 0 && (
+                        <div style={{fontSize:11,color:"#405040",marginTop:8}}>
+                          +{rareBonusPct}% bonus · {rareOwned.map(r=>r.emoji).join(" ")}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {totalStickers === 0 && (
+                    <div style={{textAlign:"center",fontSize:12,color:"#303040",padding:8}}>
+                      Marca algunas figuritas para calcular tu suerte
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             {/* Export / Import */}
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Mis datos</div>
