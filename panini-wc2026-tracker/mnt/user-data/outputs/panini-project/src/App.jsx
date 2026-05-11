@@ -1833,6 +1833,15 @@ function PaniniApp() {
                 📥 Importar
               </button>
             </div>
+            {/* Reset */}
+            <button onClick={()=>{
+              if(window.confirm("¿Empezar desde cero? Se borrará todo tu progreso y repetidas.")) {
+                setOwned(new Set());
+                setRepeated({});
+              }
+            }} style={{width:"100%",marginTop:8,padding:"10px 0",background:"#1a0808",border:"1px solid #5a2020",borderRadius:10,color:"#c05050",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
+              🗑 Empezar desde cero
+            </button>
           </div>
         )}
 
