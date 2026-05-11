@@ -40,8 +40,10 @@ const GROUP_COLORS = { A:"#22c55e",B:"#3b82f6",C:"#f59e0b",D:"#a855f7",E:"#ef444
 
 const buildAlbum = () => {
   const secs = [];
-  secs.push({ key:"FWC", name:"FWC", flag:"🌍", group:null, color:"#e8c84a",
-    stickers: Array.from({length:20},(_,i)=>({id:`FWC${i}`,num:i})) });
+  secs.push({ key:"FWCI", name:"FWC · Intro", flag:"🌍", group:null, color:"#e8c84a", special:"fwc",
+    stickers: Array.from({length:10},(_,i)=>({id:`FWC${i}`,num:i})) });
+  secs.push({ key:"FWCH", name:"FWC · Historia", flag:"🏆", group:null, color:"#e8c84a", special:"fwc",
+    stickers: Array.from({length:10},(_,i)=>({id:`FWC${i+10}`,num:i+10})) });
   GROUPS.forEach(g => g.teams.forEach(t =>
     secs.push({ key:t.code, name:t.name, flag:t.flag, group:g.id, color:GROUP_COLORS[g.id],
       stickers: Array.from({length:20},(_,i)=>({id:`${t.code}${i+1}`,num:i+1})) })
@@ -366,35 +368,59 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
 }
 
 // ── FWC Spread ────────────────────────────────────────────────────────────────
-function FWCSpread({ section, owned, repeated, have, pct, expandAll, onToggle, onOpenRepeat }) {
+function FWCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats, stickerHighlight }) {
   const [open, setOpen] = useState(false);
   useEffect(()=>setOpen(expandAll),[expandAll]);
+  useEffect(()=>{ if(stickerHighlight && section.stickers.some(s=>s.id===stickerHighlight)) setOpen(true); },[stickerHighlight]);
+
+  const have = section.stickers.filter(s=>owned.has(s.id)).length;
+  const total = section.stickers.length;
+  const pct = Math.round((have/total)*100);
+  const isFWCI = section.key==="FWCI";
+
   return (
     <div style={{background:"#0e0e1a",border:"2px solid #e8c84a33",borderRadius:14,overflow:"hidden",marginBottom:8}}>
       <div onClick={()=>setOpen(o=>!o)}
         style={{padding:"10px 14px",display:"flex",alignItems:"center",gap:10,
           background:"linear-gradient(135deg,#e8c84a30 0%,#e8c84a12 50%,#e8c84a05 100%)",
           borderBottom:"1px solid #e8c84a30",cursor:"pointer",userSelect:"none"}}>
-        <div style={{fontSize:22}}>🌍</div>
+        <div style={{fontSize:22}}>{isFWCI ? "🌍" : "🏆"}</div>
         <div style={{flex:1}}>
-          <div style={{fontSize:20,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>FWC</div>
-          <div style={{fontSize:12,color:"#e8c84a88",fontFamily:BODY}}>FWC0 – FWC19</div>
+          <div style={{fontSize:20,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>
+            {isFWCI ? "FWC · INTRO" : "FWC · HISTORIA"}
+          </div>
+          <div style={{fontSize:12,color:"#e8c84a88",fontFamily:BODY}}>
+            {isFWCI ? "FWC0 – FWC9" : "FWC10 – FWC19"}
+          </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{textAlign:"right"}}>
             <div style={{fontSize:17,fontWeight:"bold",color:"#e8c84a"}}>{pct}%</div>
-            <div style={{fontSize:12,color:"#505068"}}>{have}/20</div>
+            <div style={{fontSize:12,color:"#505068"}}>{have}/{total}</div>
           </div>
           <div style={{fontSize:16,color:"#e8c84a88",transition:"transform 0.2s",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</div>
         </div>
       </div>
       <div style={{height:3,background:"#111120"}}><div style={{height:"100%",width:`${pct}%`,background:"#e8c84a",transition:"width 0.3s"}}/></div>
       {open && (
-        <div style={{padding:"10px",display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-          {section.stickers.map(st=>(
-            <StickerBox key={st.id} id={st.id} num={st.num} color="#e8c84a" size="md"
-              owned={owned} repeated={repeated} onToggle={onToggle} onOpenRepeat={onOpenRepeat}/>
-          ))}
+        <div className="accordion-content">
+          <div style={{padding:"10px 10px 6px",display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:5}}>
+            {section.stickers.map(st=>(
+              <StickerBox key={st.id} id={st.id} num={st.num} color="#e8c84a" size="md"
+                owned={owned} repeated={repeated} onToggle={onToggle} onOpenRepeat={onOpenRepeat}
+                highlight={stickerHighlight===st.id}/>
+            ))}
+          </div>
+          {/* Limpiar / Todos */}
+          <div style={{borderTop:"1px solid #e8c84a18",padding:"6px 10px",display:"flex",gap:6,justifyContent:"flex-end"}}>
+            <button onClick={()=>section.stickers.forEach(st=>{ if(!owned.has(st.id)) onToggle(st.id); })}
+              style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #e8c84a44",borderRadius:6,color:"#e8c84acc",cursor:"pointer",fontSize:12,fontFamily:BODY}}>✓ Todos</button>
+            <button onClick={()=>{
+              section.stickers.filter(st=>owned.has(st.id)).forEach(st=>onToggle(st.id));
+              onClearRepeats(section.stickers.map(st=>st.id));
+            }}
+              style={{padding:"4px 10px",background:"#0e0e1a",border:"1px solid #30304a",borderRadius:6,color:"#505068",cursor:"pointer",fontSize:12,fontFamily:BODY}}>✗ Limpiar</button>
+          </div>
         </div>
       )}
     </div>
@@ -1385,7 +1411,8 @@ function PaniniApp() {
         if (sec) {
           const allDone = sec.stickers.every(st => st.id===id || n.has(st.id));
           if (allDone) {
-            if (sec.key==="FWC") showToast("¡Intro FWC completada!", "🌍", "#e8c84a");
+            if (sec.key==="FWCI") showToast("¡FWC Intro completada!", "🌍", "#e8c84a");
+            else if (sec.key==="FWCH") showToast("¡FWC Historia completada!", "🏆", "#e8c84a");
             else if (sec.special==="cocacola") showToast("¡Coca-Cola completada!", "🥤", "#e8302a");
             else showToast(`¡${sec.name} completo!`, sec.flag, sec.color);
           }
@@ -1446,14 +1473,15 @@ function PaniniApp() {
 
   const visibleSections = useMemo(()=>{
     let secs = ALBUM;
-    if (activeGroup!=="ALL") secs=secs.filter(s=>activeGroup==="FWC"?s.key==="FWC":s.group===activeGroup);
+    if (activeGroup!=="ALL") secs=secs.filter(s=>activeGroup==="FWC"?s.special==="fwc":s.group===activeGroup);
     if (searchQ.trim()) {
       const q = searchQ.trim().toUpperCase();
       // If it's a sticker ID, show only the team that contains it
       if (ALL_IDS.includes(q)) {
         secs = secs.filter(s=>s.stickers.some(st=>st.id===q));
       } else {
-        secs = secs.filter(s=>s.key.includes(q)||s.name.toUpperCase().includes(q));
+        secs = secs.filter(s=>s.key.includes(q)||s.name.toUpperCase().includes(q)||
+          (q==="FWC" && s.special==="fwc"));
       }
     }
     return secs;
@@ -1611,15 +1639,12 @@ function PaniniApp() {
             </div>
 
             {/* FWC */}
-            {visibleSections.filter(s=>s.key==="FWC").map(s=>{
-              const fwcHave = s.stickers.filter(st=>owned.has(st.id)).length;
-              const fwcPct = Math.round((fwcHave/20)*100);
-              return (
-                <FWCSpread key="FWC" section={s} owned={owned} repeated={repeated}
-                  have={fwcHave} pct={fwcPct} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}/>
-              );
-            })}
-            {visibleSections.filter(s=>s.key!=="FWC").map(s=>(
+            {visibleSections.filter(s=>s.special==="fwc").map(s=>(
+              <FWCSpread key={s.key} section={s} owned={owned} repeated={repeated}
+                expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal}
+                onClearRepeats={clearRepeats} stickerHighlight={stickerHighlight}/>
+            ))}
+            {visibleSections.filter(s=>s.special!=="fwc").map(s=>(
               s.special==="cocacola"
                 ? <CCSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats} stickerHighlight={stickerHighlight}/>
                 : <TeamSpread key={s.key} section={s} owned={owned} repeated={repeated} expandAll={expandAll} onToggle={toggle} onOpenRepeat={openRepeatModal} onClearRepeats={clearRepeats} stickerHighlight={stickerHighlight}/>
