@@ -1233,10 +1233,37 @@ export default function PaniniTracker() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [activeGroup, setActiveGroup] = useState("ALL");
   const [searchQ, setSearchQ] = useState("");
+  const [toast, setToast] = useState(null); // {msg, emoji, color}
+
+  const showToast = (msg, emoji, color) => {
+    setToast({msg, emoji, color});
+    setTimeout(()=>setToast(null), 3500);
+  };
 
   useEffect(()=>{ saveData(owned,repeated); setSavedPulse(true); const t=setTimeout(()=>setSavedPulse(false),1200); return()=>clearTimeout(t); },[owned,repeated]);
 
-  const toggle = useCallback(id => setOwned(p=>{ const n=new Set(p); n.has(id)?n.delete(id):n.add(id); return n; }),[]);
+  const toggle = useCallback(id => {
+    setOwned(p=>{
+      const n = new Set(p);
+      const wasOwned = n.has(id);
+      wasOwned ? n.delete(id) : n.add(id);
+      // Check completion only when marking (not unmarking)
+      if (!wasOwned) {
+        const sec = CODE_TO_SECTION[id];
+        if (sec) {
+          const allDone = sec.stickers.every(st => st.id===id || n.has(st.id));
+          if (allDone) {
+            if (sec.key==="FWC") showToast("¡Intro FWC completada!", "🌍", "#e8c84a");
+            else if (sec.special==="cocacola") showToast("¡Coca-Cola completada!", "🥤", "#e8302a");
+            else showToast(`¡${sec.name} completo!`, sec.flag, sec.color);
+          }
+          // Check full album
+          if (n.size === TOTAL) showToast("¡ÁLBUM COMPLETO! 🏆", "⚽", "#e8c84a");
+        }
+      }
+      return n;
+    });
+  },[]);
   const setRepeat = useCallback((id, count) => setRepeated(p=>{ if(count===0){const nx={...p};delete nx[id];return nx;} return {...p,[id]:count}; }),[]);
   const openRepeatModal = useCallback(id => {
     const sec = CODE_TO_SECTION[id];
@@ -1322,12 +1349,26 @@ export default function PaniniTracker() {
         @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
         @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
         @keyframes tabSlide  { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes toastIn   { from { opacity:0; transform:translateX(-50%) translateY(20px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+        @keyframes toastOut  { from { opacity:1; } to { opacity:0; transform:translateX(-50%) translateY(-10px); } }
+        @keyframes spin      { to { transform:rotate(360deg) } }
         .accordion-content { animation: slideDown 0.2s ease; }
         .tab-content       { animation: tabSlide 0.18s ease; }
-        .sticker-pop       { animation: pop 0.3s ease; }
-        @keyframes pop { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 70%{transform:scale(0.96)} 100%{transform:scale(1)} }
         button:active { opacity: 0.85; }
       `}</style>
+
+      {/* Toast notification */}
+      {toast && (
+        <div style={{position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",
+          background:"linear-gradient(135deg,#1a1a2e,#0e0e1a)",
+          border:`2px solid ${toast.color}`,borderRadius:16,
+          padding:"14px 20px",zIndex:300,textAlign:"center",
+          boxShadow:`0 8px 32px ${toast.color}44`,
+          animation:"toastIn 0.3s ease",minWidth:220,maxWidth:320}}>
+          <div style={{fontSize:32,marginBottom:6}}>{toast.emoji}</div>
+          <div style={{fontSize:16,fontWeight:"700",color:toast.color,fontFamily:DISPLAY,letterSpacing:1}}>{toast.msg}</div>
+        </div>
+      )}
       {showTrade&&<TradeModal myCode={myCode} onClose={()=>setShowTrade(false)} onConfirm={confirmTrade}/>}
       {repeatModal&&(
         <RepeatModal id={repeatModal.id} count={repeated[repeatModal.id]||0} color={repeatModal.color}
