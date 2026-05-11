@@ -1954,53 +1954,59 @@ function PaniniApp() {
         {/* ══ ÁLBUM ══ */}
         {tab==="album"&&(
           <div className="tab-content">
-            {/* Expand/collapse all */}
-            <div style={{display:"flex",gap:6,marginBottom:10}}>
-              <button onClick={()=>setExpandAll(true)}
-                style={{flex:1,padding:"8px 0",background:"#0e0e1a",border:"1px solid #2a2a3a",borderRadius:8,color:"#a0a0c0",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>
-                ▾ Expandir todo
-              </button>
-              <button onClick={()=>setExpandAll(false)}
-                style={{flex:1,padding:"8px 0",background:"#0e0e1a",border:"1px solid #2a2a3a",borderRadius:8,color:"#a0a0c0",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>
-                ▸ Colapsar todo
-              </button>
-            </div>
-
-            {/* Search — detects sticker IDs like MEX7 or FWC3 */}
-            <div style={{position:"relative",marginBottom:10}}>
-              <input value={searchQ} onChange={e=>{
-                const v = e.target.value.toUpperCase().trim();
-                setSearchQ(e.target.value);
-                // If it looks like a sticker ID, find and highlight it
-                if (ALL_IDS.includes(v)) {
-                  setStickerHighlight(v);
-                  setExpandAll(true);
-                  setTimeout(()=>{
-                    const el = document.getElementById("sticker-"+v);
-                    if (el) el.scrollIntoView({behavior:"smooth", block:"center"});
-                  }, 300);
-                } else {
-                  setStickerHighlight(null);
-                }
-              }} placeholder="Buscar equipo o figurita… (ej: Mexico, BRA, MEX7)"
-                style={{width:"100%",background:"#0c0c18",border:"1px solid #202030",borderRadius:8,
-                  color:"#e0d8f0",fontSize:15,padding:"8px 36px 8px 12px",boxSizing:"border-box",
-                  fontFamily:"inherit",outline:"none"}}/>
-              {searchQ && (
-                <button onClick={()=>{setSearchQ(""); setStickerHighlight(null);}}
-                  style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",
-                    background:"none",border:"none",color:"#505060",fontSize:16,cursor:"pointer",padding:0}}>
-                  ✕
-                </button>
-              )}
-            </div>
-            <div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8,marginBottom:10,scrollbarWidth:"none"}}>
-              {["ALL","FWC",...GROUPS.map(g=>g.id)].map(g=>{
-                const col=g==="ALL"||g==="FWC"?"#e8c84a":(GROUP_COLORS[g]||"#e8c84a");
-                return <button key={g} onClick={()=>{setActiveGroup(g);setSearchQ("");}} style={{flexShrink:0,padding:"4px 10px",borderRadius:20,fontSize:16,cursor:"pointer",border:`1px solid ${activeGroup===g?col:"#202030"}`,background:activeGroup===g?`${col}22`:"transparent",color:activeGroup===g?col:"#505068",whiteSpace:"nowrap"}}>
-                  {g==="ALL"?"Todos":g==="FWC"?"🌍 FWC":`Grp ${g}`}
-                </button>;
-              })}
+            {/* Compact toolbar */}
+            <div style={{background:"#0c0c18",border:"1px solid #1a1a28",borderRadius:12,padding:"8px 10px",marginBottom:10}}>
+              {/* Row 1: search + expand/collapse icons */}
+              <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:8}}>
+                <div style={{position:"relative",flex:1}}>
+                  <input value={searchQ} onChange={e=>{
+                    const v = e.target.value.toUpperCase().trim();
+                    setSearchQ(e.target.value);
+                    if (ALL_IDS.includes(v)) {
+                      setStickerHighlight(v);
+                      setExpandAll(true);
+                      setTimeout(()=>{
+                        const el = document.getElementById("sticker-"+v);
+                        if (el) el.scrollIntoView({behavior:"smooth", block:"center"});
+                      }, 300);
+                    } else {
+                      setStickerHighlight(null);
+                    }
+                  }} placeholder="Buscar equipo o figurita…"
+                    style={{width:"100%",background:"#080810",border:"1px solid #1e1e2e",borderRadius:8,
+                      color:"#e0d8f0",fontSize:13,padding:"7px 28px 7px 10px",boxSizing:"border-box",
+                      fontFamily:BODY,outline:"none"}}/>
+                  {searchQ && (
+                    <button onClick={()=>{setSearchQ(""); setStickerHighlight(null);}}
+                      style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",
+                        background:"none",border:"none",color:"#505060",fontSize:14,cursor:"pointer",padding:0}}>✕</button>
+                  )}
+                </div>
+                {/* Expand / collapse icons */}
+                <button onClick={()=>setExpandAll(true)} title="Expandir todo"
+                  style={{background:"none",border:"1px solid #2a2a3a",borderRadius:8,color:"#606070",
+                    cursor:"pointer",fontSize:16,padding:"6px 9px",lineHeight:1,flexShrink:0}}>⊞</button>
+                <button onClick={()=>setExpandAll(false)} title="Colapsar todo"
+                  style={{background:"none",border:"1px solid #2a2a3a",borderRadius:8,color:"#606070",
+                    cursor:"pointer",fontSize:16,padding:"6px 9px",lineHeight:1,flexShrink:0}}>⊟</button>
+              </div>
+              {/* Row 2: group filter pills */}
+              <div style={{display:"flex",gap:3,overflowX:"auto",scrollbarWidth:"none",WebkitOverflowScrolling:"touch"}}>
+                {["ALL","FWC",...GROUPS.map(g=>g.id)].map(g=>{
+                  const col = g==="ALL"||g==="FWC" ? "#e8c84a" : (GROUP_COLORS[g]||"#e8c84a");
+                  const active = activeGroup===g;
+                  return (
+                    <button key={g} onClick={()=>{setActiveGroup(g);setSearchQ("");}}
+                      style={{flexShrink:0,padding:"3px 9px",borderRadius:20,fontSize:11,cursor:"pointer",
+                        fontFamily:BODY,fontWeight:active?"700":"400",whiteSpace:"nowrap",
+                        border: active?`1px solid ${col}`:"none",
+                        background: active?`${col}22`:"transparent",
+                        color: active?col:"#404058"}}>
+                      {g==="ALL"?"Todos":g==="FWC"?"🌍 FWC":`${g}`}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* FWC */}
