@@ -1419,6 +1419,39 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
       c.fillStyle=g.col; c.beginPath(); c.roundRect(gx,gy+16,gw*(g.pct/100),gh,7); c.fill();
     });
 
+    // ── Luck level ──
+    const RARE_IDS = ["FWC0","ARG17","POR15","FRA20","ESP15","CC1","NOR15","BRA14","ENG15","MEX17"];
+    const totalCopies = Object.values(repeatList.reduce((a,{count})=>({...a,total:(a.total||0)+count}),{})).reduce((a,v)=>a+v,0)||0;
+    const totalSt = owned.size + repeatList.reduce((a,{count})=>a+count,0);
+    const ratio = totalSt > 0 ? owned.size / totalSt : 1;
+    const rareCount = RARE_IDS.filter(id=>owned.has(id)).length;
+    const luckScore = Math.min(100, Math.round(ratio*100) + rareCount*3);
+    const luckLevels = [
+      {min:90,emoji:"🍀",label:"LEGENDARIO",    color:"#e8c84a"},
+      {min:75,emoji:"⭐",label:"MUY SUERTUDO",  color:"#22c55e"},
+      {min:60,emoji:"😊",label:"NORMAL",         color:"#3b82f6"},
+      {min:45,emoji:"😅",label:"MALA SUERTE",   color:"#f97316"},
+      {min:0, emoji:"💀",label:"EL UNIVERSO TE ODA", color:"#ef4444"},
+    ];
+    const lv = luckLevels.find(l=>luckScore>=l.min)||luckLevels[luckLevels.length-1];
+
+    // Luck box background
+    c.fillStyle="#0e0e1a"; c.beginPath(); c.roundRect(100,1650,W-200,120,16); c.fill();
+    c.strokeStyle=lv.color+"66"; c.lineWidth=2; c.beginPath(); c.roundRect(100,1650,W-200,120,16); c.stroke();
+
+    // Luck label
+    c.fillStyle=lv.color; c.font=`400 64px BebasNeue, Impact, sans-serif`;
+    c.textAlign="left"; c.fillText(`${lv.emoji}  ${lv.label}`,130,1720);
+
+    // Luck score bar
+    const lbx=130, lby=1730, lbw=W-260, lbh=12;
+    c.fillStyle="#1a1a2a"; c.beginPath(); c.roundRect(lbx,lby,lbw,lbh,6); c.fill();
+    c.fillStyle=lv.color; c.beginPath(); c.roundRect(lbx,lby,lbw*(luckScore/100),lbh,6); c.fill();
+
+    // Rare count
+    c.fillStyle="#ffffff66"; c.font="500 28px Inter, sans-serif";
+    c.textAlign="right"; c.fillText(`Score ${luckScore}/100 · ${rareCount} cromos raros`,W-130,1720);
+
     // Bottom divider
     c.strokeStyle="#e8c84a44"; c.lineWidth=2;
     c.beginPath(); c.moveTo(120,1800); c.lineTo(W-120,1800); c.stroke();
