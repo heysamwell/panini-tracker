@@ -1004,6 +1004,30 @@ function TradeConfirm({ result, accentColor, onConfirm }) {
     </div>
   );
 }
+// ── Accordion Team (reusable for Repet. and Faltan tabs) ─────────────────────
+function AccordionTeam({ sec, countLabel, badgeColor, badgeBg, badgeBorder, children }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{marginBottom:8,background:"#0c0c18",border:`1px solid ${sec.color}28`,borderRadius:12,overflow:"hidden"}}>
+      <div onClick={()=>setOpen(o=>!o)}
+        style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",
+          cursor:"pointer",userSelect:"none",borderBottom: open?`1px solid ${sec.color}18`:"none"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:18}}>{sec.flag}</span>
+          <span style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>{sec.name}</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:11,color:badgeColor,background:badgeBg,border:`1px solid ${badgeBorder}`,borderRadius:20,padding:"2px 8px"}}>
+            {countLabel}
+          </span>
+          <span style={{fontSize:14,color:sec.color+"88",transition:"transform 0.2s",display:"inline-block",transform:open?"rotate(180deg)":"rotate(0deg)"}}>▾</span>
+        </div>
+      </div>
+      {open && <div className="accordion-content">{children}</div>}
+    </div>
+  );
+}
+
 // ── Market helpers ────────────────────────────────────────────────────────────
 const decodeMarketLink = (code) => {
   try {
@@ -2164,18 +2188,8 @@ function PaniniApp() {
                   const items = repeatList.filter(r=>r.id.startsWith(sec.key));
                   const copies = items.reduce((a,r)=>a+r.count,0);
                   return (
-                    <div key={sec.key} style={{marginBottom:10,background:"#0c0c18",border:`1px solid ${sec.color}28`,borderRadius:12,overflow:"hidden"}}>
-                      {/* Team header */}
-                      <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${sec.color}18`}}>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{fontSize:18}}>{sec.flag}</span>
-                          <span style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>{sec.name}</span>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:8}}>
-                          <span style={{fontSize:11,color:"#a080e0",background:"#1a1030",border:"1px solid #3a2060",borderRadius:20,padding:"2px 8px"}}>{items.length} fig · {copies} copias</span>
-                        </div>
-                      </div>
-                      {/* Chips */}
+                    <AccordionTeam key={sec.key} sec={sec} copies={copies} count={items.length}
+                      countLabel={`${items.length} fig · ${copies} copias`} badgeColor="#a080e0" badgeBg="#1a1030" badgeBorder="#3a2060">
                       <div style={{padding:"10px 12px",display:"flex",flexWrap:"wrap",gap:6}}>
                         {items.map(({id,count})=>(
                           <button key={id} onClick={()=>openRepeatModal(id)}
@@ -2187,7 +2201,7 @@ function PaniniApp() {
                           </button>
                         ))}
                       </div>
-                    </div>
+                    </AccordionTeam>
                   );
                 })}
 
@@ -2231,30 +2245,19 @@ function PaniniApp() {
                 const mis = missingByTeam[s.key]||[];
                 const col = s.color;
                 return (
-                  <div key={s.key} style={{marginBottom:10,background:"#0c0c18",border:`1px solid ${col}22`,borderRadius:12,overflow:"hidden"}}>
-                    {/* Team header */}
-                    <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${col}14`}}>
-                      <div style={{display:"flex",alignItems:"center",gap:8}}>
-                        <span style={{fontSize:18}}>{s.flag}</span>
-                        <span style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>{s.name}</span>
-                      </div>
-                      <span style={{fontSize:11,color:"#ef4444",background:"#1a0808",border:"1px solid #5a2020",borderRadius:20,padding:"2px 8px"}}>
-                        Faltan {mis.length}
-                      </span>
-                    </div>
-                    {/* Chips — tap to mark */}
+                  <AccordionTeam key={s.key} sec={s} count={mis.length}
+                    countLabel={`Faltan ${mis.length}`} badgeColor="#ef4444" badgeBg="#1a0808" badgeBorder="#5a2020">
                     <div style={{padding:"10px 12px",display:"flex",flexWrap:"wrap",gap:5}}>
                       {mis.map(id=>(
                         <button key={id} onClick={()=>toggle(id)}
                           style={{padding:"4px 10px",borderRadius:20,background:"#0e0e1a",
                             border:`1px solid ${col}33`,color:"#606078",fontSize:11,
-                            cursor:"pointer",fontFamily:BODY,fontWeight:"600",
-                            transition:"all 0.15s"}}>
+                            cursor:"pointer",fontFamily:BODY,fontWeight:"600"}}>
                           {id.replace(s.key,"")} <span style={{color:col+"66",fontSize:10}}>{s.key}</span>
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </AccordionTeam>
                 );
               })
             )}
