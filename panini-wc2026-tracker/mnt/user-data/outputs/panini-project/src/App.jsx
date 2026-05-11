@@ -2141,58 +2141,50 @@ function PaniniApp() {
         {/* ══ REPETIDAS ══ */}
         {tab==="repetidas"&&(
           <div className="tab-content">
-            {/* Stats */}
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
-              <div style={{background:"#0e0e1a",border:"1px solid #3a2a6a",borderRadius:10,padding:12,textAlign:"center"}}>
-                <div style={{fontSize:24,fontWeight:"bold",color:"#a080e0"}}>{repeatList.length}</div>
-                <div style={{fontSize:15,color:"#505068"}}>stickers distintos</div>
+            {/* Header stats */}
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+              <div style={{background:"#0e0e1a",border:"1px solid #3a2a6a",borderRadius:12,padding:14,textAlign:"center"}}>
+                <div style={{fontSize:36,fontWeight:"400",color:"#a080e0",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{repeatList.length}</div>
+                <div style={{fontSize:11,color:"#505068",marginTop:4,textTransform:"uppercase",letterSpacing:1}}>Distintas</div>
               </div>
-              <div style={{background:"#0e0e1a",border:"1px solid #3a2a6a",borderRadius:10,padding:12,textAlign:"center"}}>
-                <div style={{fontSize:24,fontWeight:"bold",color:"#c0a0ff"}}>{totalRepeatCopies}</div>
-                <div style={{fontSize:15,color:"#505068"}}>copias para cambiar</div>
-              </div>
-            </div>
-
-            {/* How to add */}
-            <div style={{background:"#0a0a18",border:"1px dashed #2a2a50",borderRadius:10,padding:12,marginBottom:14,display:"flex",gap:10,alignItems:"flex-start"}}>
-              <div style={{fontSize:18}}>💡</div>
-              <div>
-                <div style={{fontSize:14,fontWeight:"bold",marginBottom:3}}>Cómo registrar repetidas</div>
-                <div style={{fontSize:16,color:"#505068",lineHeight:1.6}}>
-                  En el <strong style={{color:"#e8c84a"}}>Álbum</strong>, marca la figurita (tap).<br/>
-                  Aparece una barra <strong style={{color:"#a080e0"}}>+ repetida</strong> abajo de la cajita.<br/>
-                  Tócala para abrir el contador y poner cuántas copias de más tienes.
-                </div>
+              <div style={{background:"#0e0e1a",border:"1px solid #3a2a6a",borderRadius:12,padding:14,textAlign:"center"}}>
+                <div style={{fontSize:36,fontWeight:"400",color:"#c0a0ff",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{totalRepeatCopies}</div>
+                <div style={{fontSize:11,color:"#505068",marginTop:4,textTransform:"uppercase",letterSpacing:1}}>Copias</div>
               </div>
             </div>
 
-            {repeatList.length===0?(
-              <div style={{textAlign:"center",padding:32,color:"#303048",fontSize:12}}>
-                Sin repetidas registradas aún.
+            {repeatList.length===0 ? (
+              <div style={{textAlign:"center",padding:48,color:"#303048"}}>
+                <div style={{fontSize:36,marginBottom:8}}>🔁</div>
+                <div style={{fontSize:13}}>Sin repetidas aún — abre el Álbum y registra tus copias</div>
               </div>
-            ):(
+            ) : (
               <div>
-                {/* Group by team */}
                 {ALBUM.filter(sec=>repeatList.some(r=>r.id.startsWith(sec.key))).map(sec=>{
                   const items = repeatList.filter(r=>r.id.startsWith(sec.key));
+                  const copies = items.reduce((a,r)=>a+r.count,0);
                   return (
-                    <div key={sec.key} style={{marginBottom:10,background:"#0c0c18",border:`1px solid ${sec.color}33`,borderRadius:10,overflow:"hidden"}}>
-                      <div style={{padding:"8px 12px",borderBottom:`1px solid ${sec.color}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                        <span style={{fontSize:11}}>{sec.flag} {sec.name}</span>
-                        <span style={{fontSize:15,color:"#a080e0"}}>{items.length} sticker{items.length>1?"s":""} · {items.reduce((a,r)=>a+r.count,0)} copias</span>
+                    <div key={sec.key} style={{marginBottom:10,background:"#0c0c18",border:`1px solid ${sec.color}28`,borderRadius:12,overflow:"hidden"}}>
+                      {/* Team header */}
+                      <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${sec.color}18`}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:18}}>{sec.flag}</span>
+                          <span style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>{sec.name}</span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:11,color:"#a080e0",background:"#1a1030",border:"1px solid #3a2060",borderRadius:20,padding:"2px 8px"}}>{items.length} fig · {copies} copias</span>
+                        </div>
                       </div>
-                      <div style={{padding:"8px 12px",display:"flex",flexWrap:"wrap",gap:6}}>
+                      {/* Chips */}
+                      <div style={{padding:"10px 12px",display:"flex",flexWrap:"wrap",gap:6}}>
                         {items.map(({id,count})=>(
-                          <div key={id} style={{display:"flex",alignItems:"center",background:"#10102a",border:`1px solid ${sec.color}44`,borderRadius:8,overflow:"hidden"}}>
-                            <div style={{padding:"6px 8px",fontSize:14,color:sec.color,fontWeight:"bold"}}>{id}</div>
-                            <div style={{display:"flex",alignItems:"center",background:"#1a1a3a",borderLeft:`1px solid ${sec.color}22`}}>
-                              <button onClick={()=>setRepeat(id,Math.max(0,count-1))} style={{padding:"6px 8px",background:"none",border:"none",cursor:"pointer",color:"#505068",fontSize:14,lineHeight:1}}>−</button>
-                              <div style={{minWidth:20,textAlign:"center",fontSize:16,fontWeight:"bold",color:"#c0a0ff"}}>×{count}</div>
-                              <button onClick={()=>setRepeat(id,Math.min(20,count+1))} style={{padding:"6px 8px",background:"none",border:"none",cursor:"pointer",color:"#a080e0",fontSize:14,lineHeight:1}}>+</button>
-                            </div>
-                            <button onClick={()=>openRepeatModal(id)} style={{padding:"6px 8px",background:"#181828",border:"none",cursor:"pointer",color:"#606080",fontSize:16,fontFamily:"inherit"}}>✎</button>
-                            <button onClick={()=>setRepeat(id,0)} style={{padding:"6px 8px",background:"#1a0808",border:"none",cursor:"pointer",color:"#b04040",fontSize:10}}>✗</button>
-                          </div>
+                          <button key={id} onClick={()=>openRepeatModal(id)}
+                            style={{display:"flex",alignItems:"center",gap:0,background:"#10102a",
+                              border:`1.5px solid ${sec.color}55`,borderRadius:20,overflow:"hidden",
+                              cursor:"pointer",padding:0,fontFamily:BODY}}>
+                            <span style={{padding:"5px 10px",fontSize:12,color:sec.color,fontWeight:"700"}}>{id}</span>
+                            <span style={{padding:"5px 8px",background:sec.color+"22",fontSize:11,color:"#c0a0ff",fontWeight:"600",borderLeft:`1px solid ${sec.color}33`}}>×{count}</span>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -2200,7 +2192,7 @@ function PaniniApp() {
                 })}
 
                 <button onClick={()=>navigator.clipboard?.writeText(`Mis repetidas Panini WC2026:\n${repeatList.map(r=>`${r.id} ×${r.count}`).join("  |  ")}`)}
-                  style={{width:"100%",marginTop:6,padding:"10px 0",background:"#0e0e28",border:"1px solid #303080",borderRadius:10,color:"#6070c0",cursor:"pointer",fontSize:14,fontFamily:"inherit"}}>
+                  style={{width:"100%",marginTop:4,padding:"11px 0",background:"#0e0e28",border:"1px solid #303080",borderRadius:10,color:"#6070c0",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
                   ⎘ Copiar lista para WhatsApp
                 </button>
               </div>
@@ -2211,38 +2203,54 @@ function PaniniApp() {
         {/* ══ FALTAN ══ */}
         {tab==="faltantes"&&(
           <div className="tab-content">
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-              <div><div style={{fontSize:22,fontWeight:"bold"}}>{missing.length}</div><div style={{fontSize:15,color:"#404050"}}>figuritas faltantes</div></div>
+            {/* Header */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div>
+                <div style={{fontSize:40,fontWeight:"400",color:"#ef4444",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{missing.length}</div>
+                <div style={{fontSize:11,color:"#505060",textTransform:"uppercase",letterSpacing:1,marginTop:2}}>figuritas faltantes</div>
+              </div>
               <div style={{display:"flex",gap:6}}>
                 <button onClick={()=>{ const lines=Object.entries(missingByTeam).map(([c,ids])=>`${c}: ${ids.map(id=>id.replace(c,"")).join(" ")}`).join("\n"); navigator.clipboard?.writeText(`Faltan ${missing.length}:\n\n${lines}`); setShareMsg(true); setTimeout(()=>setShareMsg(false),2500); }}
-                  style={{padding:"7px 10px",background:"#0e0e28",border:"1px solid #404090",borderRadius:8,color:"#6070c0",cursor:"pointer",fontSize:16,fontFamily:"inherit"}}>
-                  {shareMsg?"✓ Copiado!":"⎘ Copiar"}
+                  style={{padding:"8px 14px",background:"#0e0e28",border:"1px solid #303080",borderRadius:8,color:shareMsg?"#50d0a0":"#6070c0",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600"}}>
+                  {shareMsg?"✓ Copiado":"⎘ Copiar"}
+                </button>
+                <button onClick={handlePDF} disabled={pdfLoading}
+                  style={{padding:"8px 14px",background:"#1a1020",border:"1px solid #6040a0",borderRadius:8,color:pdfLoading?"#504060":"#c090f0",cursor:pdfLoading?"not-allowed":"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",gap:6}}>
+                  {pdfLoading?<><div style={{width:12,height:12,border:"2px solid #50407044",borderTop:"2px solid #c090f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>PDF</>:<>📄 PDF</>}
                 </button>
               </div>
             </div>
 
-            {/* PDF download button */}
-            <button onClick={handlePDF} disabled={pdfLoading}
-              style={{width:"100%",marginBottom:14,padding:"12px 0",background:"linear-gradient(135deg,#1a1020,#120c1a)",border:"1px solid #7050a0",borderRadius:12,color:pdfLoading?"#504060":"#c090f0",cursor:pdfLoading?"not-allowed":"pointer",fontSize:16,fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-              {pdfLoading?<><div style={{width:14,height:14,border:"2px solid #50407044",borderTop:"2px solid #c090f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Generando PDF…</>:<>📄 Descargar reporte PDF (Repetidas + Faltan)</>}
-            </button>
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-
-            {missing.length===0?(
-              <div style={{textAlign:"center",padding:40,fontSize:22}}>🏆<div style={{fontSize:16,marginTop:8,color:"#60b060"}}>¡Álbum completo!</div></div>
-            ):(
+            {missing.length===0 ? (
+              <div style={{textAlign:"center",padding:48}}>
+                <div style={{fontSize:48,marginBottom:12}}>🏆</div>
+                <div style={{fontSize:16,fontWeight:"400",color:"#60b060",fontFamily:DISPLAY,letterSpacing:2}}>¡ÁLBUM COMPLETO!</div>
+              </div>
+            ) : (
               ALBUM.filter(s=>missingByTeam[s.key]?.length>0).map(s=>{
-                const mis=missingByTeam[s.key]||[];
+                const mis = missingByTeam[s.key]||[];
+                const col = s.color;
                 return (
-                  <div key={s.key} style={{marginBottom:8,background:"#0c0c18",border:`1px solid ${s.color}22`,borderRadius:10,overflow:"hidden"}}>
-                    <div style={{padding:"7px 12px",borderBottom:`1px solid ${s.color}11`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:11}}>{s.flag} {s.name}</span>
-                      <span style={{fontSize:16,color:"#c05050"}}>Faltan {mis.length}</span>
+                  <div key={s.key} style={{marginBottom:10,background:"#0c0c18",border:`1px solid ${col}22`,borderRadius:12,overflow:"hidden"}}>
+                    {/* Team header */}
+                    <div style={{padding:"10px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",borderBottom:`1px solid ${col}14`}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8}}>
+                        <span style={{fontSize:18}}>{s.flag}</span>
+                        <span style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>{s.name}</span>
+                      </div>
+                      <span style={{fontSize:11,color:"#ef4444",background:"#1a0808",border:"1px solid #5a2020",borderRadius:20,padding:"2px 8px"}}>
+                        Faltan {mis.length}
+                      </span>
                     </div>
-                    <div style={{padding:"7px 12px",display:"flex",flexWrap:"wrap",gap:4}}>
+                    {/* Chips — tap to mark */}
+                    <div style={{padding:"10px 12px",display:"flex",flexWrap:"wrap",gap:5}}>
                       {mis.map(id=>(
-                        <button key={id} onClick={()=>toggle(id)} style={{padding:"2px 6px",borderRadius:4,background:"#101018",border:`1px solid ${s.color}33`,color:"#606078",fontSize:16,cursor:"pointer",fontFamily:"inherit"}}>
-                          {id}
+                        <button key={id} onClick={()=>toggle(id)}
+                          style={{padding:"4px 10px",borderRadius:20,background:"#0e0e1a",
+                            border:`1px solid ${col}33`,color:"#606078",fontSize:11,
+                            cursor:"pointer",fontFamily:BODY,fontWeight:"600",
+                            transition:"all 0.15s"}}>
+                          {id.replace(s.key,"")} <span style={{color:col+"66",fontSize:10}}>{s.key}</span>
                         </button>
                       ))}
                     </div>
