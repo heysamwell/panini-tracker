@@ -1246,24 +1246,59 @@ function QRMarket({ repeatList, missing }) {
 // ── Login Form ────────────────────────────────────────────────────────────────
 function LoginForm({ signIn, authLoading }) {
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [code, setCode] = useState("");
+  const [step, setStep] = useState("email"); // "email" | "code"
   const [err, setErr] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSend = async () => {
     if (!email.includes("@")) { setErr("Email inválido"); return; }
     setErr("");
     const error = await signIn(email);
     if (error) setErr(error.message);
-    else setSent(true);
+    else setStep("code");
   };
 
-  if (sent) return (
-    <div style={{textAlign:"center",padding:"8px 0"}}>
-      <div style={{fontSize:32,marginBottom:8}}>📬</div>
-      <div style={{fontSize:14,fontWeight:"600",color:"#50d0a0",marginBottom:6}}>¡Revisa tu email!</div>
-      <div style={{fontSize:12,color:"#506060",lineHeight:1.6}}>
-        Te mandamos un link mágico a <strong style={{color:"#a0c0b0"}}>{email}</strong>. Ábrelo para iniciar sesión.
+  const handleVerify = async () => {
+    if (code.length < 6) { setErr("El código tiene 6 dígitos"); return; }
+    setErr(""); setVerifying(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email, token: code, type: "email"
+    });
+    setVerifying(false);
+    if (error) setErr("Código inválido o expirado. Intenta de nuevo.");
+  };
+
+  if (step === "code") return (
+    <div>
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:32,marginBottom:8}}>📬</div>
+        <div style={{fontSize:14,fontWeight:"600",color:"#50d0a0",marginBottom:4}}>Revisa tu email</div>
+        <div style={{fontSize:12,color:"#506060",lineHeight:1.6}}>
+          Enviamos un código de 6 dígitos a <strong style={{color:"#a0c0b0"}}>{email}</strong>
+        </div>
       </div>
+      <input value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))}
+        placeholder="123456"
+        type="number"
+        inputMode="numeric"
+        style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:8,
+          color:"#e8c84a",fontSize:24,padding:"12px",boxSizing:"border-box",textAlign:"center",
+          fontFamily:DISPLAY,letterSpacing:8,outline:"none",marginBottom:8}}/>
+      {err && <div style={{fontSize:12,color:"#c05050",marginBottom:8}}>{err}</div>}
+      <button onClick={handleVerify} disabled={verifying}
+        style={{width:"100%",padding:"12px 0",background:"linear-gradient(135deg,#1a1428,#0e0818)",
+          border:"1px solid #6040a0",borderRadius:10,color:"#c080f0",cursor:verifying?"not-allowed":"pointer",
+          fontSize:14,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8}}>
+        {verifying
+          ? <><div style={{width:16,height:16,border:"2px solid #c080f022",borderTop:"2px solid #c080f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Verificando…</>
+          : "✓ Confirmar código"}
+      </button>
+      <button onClick={()=>{setStep("email");setCode("");setErr("");}}
+        style={{width:"100%",padding:"8px 0",background:"none",border:"none",
+          color:"#404050",cursor:"pointer",fontSize:12,fontFamily:BODY}}>
+        ← Usar otro email
+      </button>
     </div>
   );
 
@@ -1273,25 +1308,22 @@ function LoginForm({ signIn, authLoading }) {
         Inicia sesión para guardar tu progreso en la nube y accederlo desde cualquier dispositivo.
       </div>
       <input value={email} onChange={e=>setEmail(e.target.value)}
-        placeholder="tu@email.com"
-        type="email"
+        placeholder="tu@email.com" type="email"
         style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:8,
           color:"#e0d8f0",fontSize:14,padding:"10px 12px",boxSizing:"border-box",
           fontFamily:BODY,outline:"none",marginBottom:8}}/>
       {err && <div style={{fontSize:12,color:"#c05050",marginBottom:8}}>{err}</div>}
-      <button onClick={handleSubmit} disabled={authLoading}
-        style={{width:"100%",padding:"12px 0",
-          background:"linear-gradient(135deg,#1a1428,#0e0818)",
-          border:"1px solid #6040a0",borderRadius:10,
-          color:"#c080f0",cursor:authLoading?"not-allowed":"pointer",
-          fontSize:14,fontFamily:BODY,fontWeight:"600",
+      <button onClick={handleSend} disabled={authLoading}
+        style={{width:"100%",padding:"12px 0",background:"linear-gradient(135deg,#1a1428,#0e0818)",
+          border:"1px solid #6040a0",borderRadius:10,color:"#c080f0",
+          cursor:authLoading?"not-allowed":"pointer",fontSize:14,fontFamily:BODY,fontWeight:"600",
           display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
         {authLoading
           ? <><div style={{width:16,height:16,border:"2px solid #c080f022",borderTop:"2px solid #c080f0",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/>Enviando…</>
-          : "✉️ Enviar link mágico"}
+          : "✉️ Enviar código"}
       </button>
       <div style={{fontSize:11,color:"#303040",textAlign:"center",marginTop:8}}>
-        Sin contraseña — solo un link en tu email
+        Sin contraseña — recibirás un código de 6 dígitos
       </div>
     </div>
   );
@@ -1764,7 +1796,7 @@ function PaniniApp() {
       icon: user
         ? <div style={{width:18,height:18,borderRadius:9,background:"linear-gradient(135deg,#3b82f6,#6366f1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:"bold",color:"#fff"}}>{user.email?.[0]?.toUpperCase()}</div>
         : <IconHeart/>,
-      label: user ? "Perfil" : "Acerca"},
+      label: user ? "Perfil" : "Config"},
   ];
 
   return (
