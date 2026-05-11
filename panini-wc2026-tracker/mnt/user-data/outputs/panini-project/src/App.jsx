@@ -1642,12 +1642,15 @@ function PaniniApp() {
     }, 1500);
   },[user]);
 
-  // Sign in with email magic link
+  // Sign in with OTP code (no magic link)
   const signIn = async (email) => {
     setAuthLoading(true);
     const {error} = await supabase.auth.signInWithOtp({
       email,
-      options:{emailRedirectTo: window.location.origin}
+      options:{
+        shouldCreateUser: true,
+        emailRedirectTo: null,
+      }
     });
     setAuthLoading(false);
     return error;
