@@ -357,9 +357,9 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
           style={{position:"absolute",bottom:0,left:0,right:0,
             background: rep>0 ? "#2a1060" : color+"18",
             borderTop:"1px solid "+(rep>0 ? "#6040b0" : color+"33"),
-            padding:"3px 0",textAlign:"center",cursor:"pointer",
-            fontSize:14,color:rep>0 ? "#c0a0ff" : color+"99",
-            fontWeight:"bold",letterSpacing:0.3,transition:"background 0.2s"}}>
+            padding:"2px 0",textAlign:"center",cursor:"pointer",
+            fontSize:10,color:rep>0 ? "#c0a0ff" : color+"88",
+            fontWeight:"400",letterSpacing:0.2,transition:"background 0.2s"}}>
           {rep>0 ? ("\u25c8 "+rep+" extra") : "+ repetida"}
         </div>
       )}
