@@ -1357,7 +1357,13 @@ export default function PaniniTracker() {
         @keyframes fadeIn    { from { opacity:0; } to { opacity:1; } }
         @keyframes tabSlide  { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
         @keyframes toastIn   { from { opacity:0; transform:translateX(-50%) translateY(20px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
-        @keyframes toastOut  { from { opacity:1; } to { opacity:0; transform:translateX(-50%) translateY(-10px); } }
+        @keyframes borderPulse {
+          0%   { border-color: var(--tc); box-shadow: 0 8px 32px var(--tc-a); }
+          40%  { border-color: #e8c84a; box-shadow: 0 0 40px #e8c84acc, 0 0 80px #e8c84a66; }
+          70%  { border-color: #e8c84a; box-shadow: 0 0 60px #e8c84aff, 0 0 120px #e8c84a88; }
+          100% { border-color: var(--tc); box-shadow: 0 8px 32px var(--tc-a); }
+        }
+        .toast-pulse { animation: toastIn 0.3s ease, borderPulse 1.4s ease 0.3s; }
         @keyframes spin      { to { transform:rotate(360deg) } }
         @keyframes goldenFlash {
           0%   { box-shadow: 0 0 0px #e8c84a00; border-color: inherit; }
@@ -1374,12 +1380,16 @@ export default function PaniniTracker() {
 
       {/* Toast notification */}
       {toast && (
-        <div style={{position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",
-          background:"linear-gradient(135deg,#1a1a2e,#0e0e1a)",
-          border:`2px solid ${toast.color}`,borderRadius:16,
-          padding:"14px 20px",zIndex:300,textAlign:"center",
-          boxShadow:`0 8px 32px ${toast.color}44`,
-          animation:"toastIn 0.3s ease",minWidth:220,maxWidth:320}}>
+        <div className="toast-pulse"
+          style={{
+            "--tc": toast.color,
+            "--tc-a": toast.color+"44",
+            position:"fixed",bottom:90,left:"50%",transform:"translateX(-50%)",
+            background:"linear-gradient(135deg,#1a1a2e,#0e0e1a)",
+            border:`2px solid ${toast.color}`,borderRadius:16,
+            padding:"14px 20px",zIndex:300,textAlign:"center",
+            boxShadow:`0 8px 32px ${toast.color}44`,
+            minWidth:220,maxWidth:320}}>
           <div style={{fontSize:32,marginBottom:6}}>{toast.emoji}</div>
           <div style={{fontSize:16,fontWeight:"700",color:toast.color,fontFamily:DISPLAY,letterSpacing:1}}>{toast.msg}</div>
         </div>
