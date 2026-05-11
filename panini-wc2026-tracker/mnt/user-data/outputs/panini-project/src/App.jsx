@@ -1260,7 +1260,7 @@ function LoginForm({ signIn, authLoading }) {
   };
 
   const handleVerify = async () => {
-    if (code.length < 6) { setErr("El código tiene 6 dígitos"); return; }
+    if (code.length < 6) { setErr("Código inválido"); return; }
     setErr(""); setVerifying(true);
     const { error } = await supabase.auth.verifyOtp({
       email, token: code, type: "email"
@@ -1278,13 +1278,13 @@ function LoginForm({ signIn, authLoading }) {
           Enviamos un código de 6 dígitos a <strong style={{color:"#a0c0b0"}}>{email}</strong>
         </div>
       </div>
-      <input value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))}
-        placeholder="123456"
-        type="number"
+      <input value={code} onChange={e=>setCode(e.target.value.replace(/[^a-zA-Z0-9]/g,"").slice(0,8))}
+        placeholder="12345678"
+        type="text"
         inputMode="numeric"
         style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:8,
           color:"#e8c84a",fontSize:24,padding:"12px",boxSizing:"border-box",textAlign:"center",
-          fontFamily:DISPLAY,letterSpacing:8,outline:"none",marginBottom:8}}/>
+          fontFamily:DISPLAY,letterSpacing:6,outline:"none",marginBottom:8}}/>
       {err && <div style={{fontSize:12,color:"#c05050",marginBottom:8}}>{err}</div>}
       <button onClick={handleVerify} disabled={verifying}
         style={{width:"100%",padding:"12px 0",background:"linear-gradient(135deg,#1a1428,#0e0818)",
