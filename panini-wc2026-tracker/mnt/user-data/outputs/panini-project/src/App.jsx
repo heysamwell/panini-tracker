@@ -1304,7 +1304,6 @@ export default function PaniniTracker() {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(()=>{
-    // Simulate brief load then check if first time
     const timer = setTimeout(()=>{
       const seen = localStorage.getItem("panini_onboarding_done");
       setShowOnboarding(!seen);
@@ -1335,6 +1334,11 @@ export default function PaniniTracker() {
   );
 
   if (showOnboarding) return <Onboarding onDone={finishOnboarding}/>;
+
+  return <PaniniApp/>;
+}
+
+function PaniniApp() {
   const [owned,    setOwned]    = useState(()=>new Set(loadData().owned));
   const [repeated, setRepeated] = useState(()=>loadData().repeated);
   const [tab, setTab] = useState("album");
