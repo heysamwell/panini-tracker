@@ -1287,7 +1287,7 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
     c.fillText("completado",W/2,790);
 
     // Stats row
-    const stats = [[totalOwned,"Tengo","#22c55e"],[missing.length,"Faltan","#ef4444"],[repeatList.length,"Repito","#a855f7"]];
+    const stats = [[totalOwned,"Tengo","#22c55e"],[missing.length,"Faltan","#ef4444"],[repeatList.length,"Repetidas","#a855f7"]];
     stats.forEach(([val,label,col],i)=>{
       const x = 180 + i*360;
       c.fillStyle=col; c.font="900 90px Impact, sans-serif";
