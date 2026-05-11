@@ -491,14 +491,20 @@ function CCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat,
 }
 
 // ── Team Spread ───────────────────────────────────────────────────────────────
-function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats, stickerHighlight }) {
+function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat, onClearRepeats, stickerHighlight, onComplete }) {
   const { key:code, name, flag, group, color, stickers } = section;
   const [open, setOpen] = useState(false);
+  const [justCompleted, setJustCompleted] = useState(false);
   useEffect(()=>setOpen(expandAll),[expandAll]);
-  // Auto-open if highlighted sticker is in this section
   useEffect(()=>{ if(stickerHighlight && stickers.some(s=>s.id===stickerHighlight)) setOpen(true); },[stickerHighlight]);
+
   const have = stickers.filter(s=>owned.has(s.id)).length;
   const pct  = Math.round((have/20)*100);
+
+  // Detect completion
+  useEffect(()=>{
+    if (have===20) { setJustCompleted(true); setTimeout(()=>setJustCompleted(false), 2000); }
+  },[have]);
   const s = n => stickers[n-1];
   const box = (n, size="md") => (
     <StickerBox key={n} id={s(n).id} num={n} color={color} size={size}
@@ -507,7 +513,8 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
   );
 
   return (
-    <div style={{background:"#0e0e1a",border:`2px solid ${color}44`,borderRadius:14,overflow:"hidden",marginBottom:8}}>
+    <div className={justCompleted ? "golden-flash" : ""}
+      style={{background:"#0e0e1a",border:`2px solid ${justCompleted ? "#e8c84a" : color+"44"}`,borderRadius:14,overflow:"hidden",marginBottom:8,transition:"border-color 0.3s"}}>
       {/* Header — tap to toggle */}
       <div onClick={()=>setOpen(o=>!o)}
         style={{background:`linear-gradient(135deg,${color}35 0%,${color}15 50%,${color}08 100%)`,
@@ -1352,6 +1359,14 @@ export default function PaniniTracker() {
         @keyframes toastIn   { from { opacity:0; transform:translateX(-50%) translateY(20px) scale(0.9); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
         @keyframes toastOut  { from { opacity:1; } to { opacity:0; transform:translateX(-50%) translateY(-10px); } }
         @keyframes spin      { to { transform:rotate(360deg) } }
+        @keyframes goldenFlash {
+          0%   { box-shadow: 0 0 0px #e8c84a00; border-color: inherit; }
+          20%  { box-shadow: 0 0 30px #e8c84a99, 0 0 60px #e8c84a44; border-color: #e8c84a; }
+          50%  { box-shadow: 0 0 50px #e8c84acc, 0 0 100px #e8c84a66; border-color: #e8c84a; }
+          80%  { box-shadow: 0 0 30px #e8c84a99, 0 0 60px #e8c84a44; border-color: #e8c84a; }
+          100% { box-shadow: 0 0 0px #e8c84a00; border-color: inherit; }
+        }
+        .golden-flash { animation: goldenFlash 1.8s ease; }
         .accordion-content { animation: slideDown 0.2s ease; }
         .tab-content       { animation: tabSlide 0.18s ease; }
         button:active { opacity: 0.85; }
