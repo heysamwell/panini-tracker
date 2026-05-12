@@ -111,7 +111,7 @@ const generatePDF = async (owned, repeated, missing, repeatList, missingByTeam) 
   doc.line(0,50,W,50);
 
   doc.setFontSize(22); doc.setTextColor(232,200,74); doc.setFont("helvetica","bold");
-  doc.text("Panini FIFA World Cup 2026™", W/2, 22, {align:"center"});
+  doc.text("Album WC2026", W/2, 22, {align:"center"});
   doc.setFontSize(12); doc.setTextColor(160,170,220);
   doc.text("Reporte de mi álbum", W/2, 32, {align:"center"});
   doc.setFontSize(9); doc.setTextColor(100,110,140);
@@ -271,11 +271,11 @@ const generatePDF = async (owned, repeated, missing, repeatList, missingByTeam) 
     doc.setPage(i);
     doc.setDrawColor(40,40,60); doc.line(margin,287,W-margin,287);
     doc.setFontSize(7); doc.setTextColor(60,60,80);
-    doc.text("Panini FIFA World Cup 2026™ Tracker", margin, 292);
+    doc.text("Album WC2026 Tracker", margin, 292);
     doc.text(`Pág. ${i} / ${pages}`, W-margin, 292, {align:"right"});
   }
 
-  doc.save(`panini-wc2026-${new Date().toISOString().slice(0,10)}.pdf`);
+  doc.save(`wc26-${new Date().toISOString().slice(0,10)}.pdf`);
 };
 
 // ── Repeat modal ──────────────────────────────────────────────────────────────
@@ -698,7 +698,7 @@ function ScanModal({ onClose, onApply }) {
   const scan = async () => {
     if(!b64) return; setPhase("scanning");
     try {
-      const prompt = "Panini FIFA World Cup 2026 sticker album. IDs: TEAMCODE+1-20. e.g. MEX1, CZE13. Valid codes: FWC," + teamCodes + ". Return ONLY JSON, no markdown: {\"found\":[\"MEX1\",...],\"empty\":[\"MEX2\",...]}";
+      const prompt = "WC2026 sticker album. IDs: TEAMCODE+1-20. e.g. MEX1, CZE13. Valid codes: FWC," + teamCodes + ". Return ONLY JSON, no markdown: {\"found\":[\"MEX1\",...],\"empty\":[\"MEX2\",...]}";
       const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mime,data:b64}},{type:"text",text:prompt}]}]})});
       const data=await res.json();
       const text=(data.content||[]).map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
@@ -1147,7 +1147,7 @@ function FriendLinkInput({ myRepeats, myMissing, preloaded }) {
 
           {(result.theyGiveMe.length>0||result.iGiveThem.length>0)&&(
             <button onClick={()=>{
-              const txt=["🔄 Propuesta de intercambio Panini WC2026",
+              const txt=["🔄 Propuesta de intercambio Album WC2026",
                 result.theyGiveMe.length>0?"Me das: "+result.theyGiveMe.map(r=>r.id).join(", "):"",
                 result.iGiveThem.length>0?"Te doy: "+result.iGiveThem.map(r=>r.id).join(", "):"",
               ].filter(Boolean).join("\n");
@@ -1388,13 +1388,13 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
     // Gold accent line top
     c.fillStyle="#e8c84a"; c.fillRect(0,0,W,6);
 
-    // FIFA WC label
+    // WC label
     c.fillStyle="#e8c84a88"; c.font="500 42px Inter, sans-serif";
-    c.textAlign="center"; c.fillText("FIFA WORLD CUP 2026™",W/2,100);
+    c.textAlign="center"; c.fillText("MUNDIAL 2026",W/2,100);
 
     // App name
     c.fillStyle="#e8c84a"; c.font="900 130px BebasNeue, Impact, sans-serif";
-    c.fillText("PANINI",W/2,240);
+    c.fillText("ALBUM",W/2,240);
     c.fillStyle="#ffffff"; c.font="900 130px BebasNeue, Impact, sans-serif";
     c.fillText("TRACKER",W/2,370);
 
@@ -1514,7 +1514,7 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
             <img src={imgUrl} style={{width:"100%",display:"block"}} alt="Share card preview"/>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <a href={imgUrl} download="mi-progreso-panini.png"
+            <a href={imgUrl} download="mi-progreso-wc26.png"
               style={{flex:1,padding:"11px 0",background:"linear-gradient(135deg,#1a1428,#0e0818)",
                 border:"1px solid #8040a0",borderRadius:10,color:"#c080f0",cursor:"pointer",
                 fontSize:13,fontFamily:BODY,fontWeight:"600",textAlign:"center",textDecoration:"none",display:"block"}}>
@@ -1536,8 +1536,8 @@ function ShareCard({ owned, missing, repeatList, pct, totalOwned }) {
 const ONBOARDING_SLIDES = [
   {
     emoji:"⚽",
-    title:"Bienvenido al\nPanini Tracker",
-    desc:"Lleva el control de tu álbum FIFA World Cup 2026™ de forma fácil y rápida.",
+    title:"Bienvenido al\nAlbum Tracker WC26",
+    desc:"Lleva el control de tu álbum Mundial 2026 de forma fácil y rápida.",
     color:"#e8c84a",
   },
   {
@@ -1643,9 +1643,9 @@ export default function PaniniTracker() {
       alignItems:"center",justifyContent:"center",fontFamily:BODY}}>
       <div style={{fontSize:56,marginBottom:16}}>⚽</div>
       <div style={{fontSize:28,fontWeight:"400",color:"#e8c84a",fontFamily:DISPLAY,letterSpacing:3,marginBottom:6}}>
-        PANINI TRACKER
+        ALBUM TRACKER WC26
       </div>
-      <div style={{fontSize:13,color:"#404058",marginBottom:32}}>FIFA World Cup 2026™</div>
+      <div style={{fontSize:13,color:"#404058",marginBottom:32}}>Mundial 2026</div>
       <div style={{width:48,height:4,background:"#1a1a2a",borderRadius:2,overflow:"hidden"}}>
         <div style={{height:"100%",width:"40%",background:"#e8c84a",borderRadius:2,
           animation:"loadSlide 1s infinite alternate"}}/>
@@ -1916,8 +1916,8 @@ function PaniniApp() {
         <div style={{maxWidth:520,margin:"0 auto"}}>
           <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
             <div>
-              <div style={{fontSize:14,letterSpacing:4,color:"#e8c84a",textTransform:"uppercase",fontFamily:BODY}}>FIFA World Cup 2026™</div>
-              <div style={{fontSize:28,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>Panini Tracker</div>
+              <div style={{fontSize:14,letterSpacing:4,color:"#e8c84a",textTransform:"uppercase",fontFamily:BODY}}>Mundial 2026</div>
+              <div style={{fontSize:28,fontWeight:"400",letterSpacing:2,fontFamily:DISPLAY,lineHeight:1}}>Album Tracker WC26</div>
             </div>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               {syncing && <div style={{fontSize:11,color:"#6090d0",letterSpacing:1}}>☁️</div>}
@@ -2038,7 +2038,7 @@ function PaniniApp() {
                 const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
                 const url=URL.createObjectURL(blob);
                 const a=document.createElement("a");
-                a.href=url; a.download=`mi-album-panini-${new Date().toISOString().slice(0,10)}.json`; a.click();
+                a.href=url; a.download=`mi-album-wc26-${new Date().toISOString().slice(0,10)}.json`; a.click();
                 URL.revokeObjectURL(url);
               }} style={{flex:1,padding:"10px 0",background:"#0a1a10",border:"1px solid #2a5a38",borderRadius:10,color:"#50d0a0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600",display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
                 📤 Exportar
@@ -2139,8 +2139,8 @@ function PaniniApp() {
             <div style={{background:"linear-gradient(135deg,#0e0e1a,#141428)",border:"1px solid #2a2a50",borderRadius:16,padding:20,marginBottom:12,textAlign:"center"}}>
               <div style={{fontSize:11,color:"#404058",letterSpacing:2,textTransform:"uppercase",marginBottom:16}}>Acerca de</div>
               <div style={{fontSize:48,marginBottom:8}}>⚽</div>
-              <div style={{fontSize:28,fontWeight:"400",color:"#e8c84a",letterSpacing:3,fontFamily:DISPLAY,lineHeight:1,marginBottom:4}}>Panini Tracker</div>
-              <div style={{fontSize:12,color:"#606078",marginBottom:16}}>FIFA World Cup 2026™ · v1.0</div>
+              <div style={{fontSize:28,fontWeight:"400",color:"#e8c84a",letterSpacing:3,fontFamily:DISPLAY,lineHeight:1,marginBottom:4}}>Album Tracker WC26</div>
+              <div style={{fontSize:12,color:"#606078",marginBottom:16}}>Mundial 2026 · v1.0</div>
               <div style={{fontSize:13,color:"#9090b0",marginBottom:16}}>Hecho con ❤️ por <strong style={{color:"#e0d8f0"}}>Hey Samwell</strong></div>
               <a href="https://instagram.com/hey_samwell" target="_blank" rel="noopener noreferrer"
                 style={{display:"inline-flex",alignItems:"center",gap:6,padding:"8px 16px",
@@ -2211,7 +2211,7 @@ function PaniniApp() {
                   );
                 })}
 
-                <button onClick={()=>navigator.clipboard?.writeText(`Mis repetidas Panini WC2026:\n${repeatList.map(r=>`${r.id} ×${r.count}`).join("  |  ")}`)}
+                <button onClick={()=>navigator.clipboard?.writeText(`Mis repetidas Album WC2026:\n${repeatList.map(r=>`${r.id} ×${r.count}`).join("  |  ")}`)}
                   style={{width:"100%",marginTop:4,padding:"11px 0",background:"#0e0e28",border:"1px solid #303080",borderRadius:10,color:"#6070c0",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
                   ⎘ Copiar lista para WhatsApp
                 </button>
@@ -2450,7 +2450,7 @@ function PaniniApp() {
               const luckScore = Math.min(100, Math.round(ratio * 100) + rareBonusPct);
 
               const levels = [
-                {min:90, emoji:"🍀", label:"Legendario",    color:"#e8c84a", msg:"El Panini te ama. Naciste con suerte."},
+                {min:90, emoji:"🍀", label:"Legendario",    color:"#e8c84a", msg:"El álbum te ama. Naciste con suerte."},
                 {min:75, emoji:"⭐", label:"Muy suertudo",  color:"#22c55e", msg:"Claramente tienes algún truco. Bien jugado."},
                 {min:60, emoji:"😊", label:"Normal",         color:"#3b82f6", msg:"Ni muy buena ni muy mala. La vida promedio del coleccionista."},
                 {min:45, emoji:"😅", label:"Mala suerte",   color:"#f97316", msg:"Los sobres te están trolleando. Sigue intentando."},
@@ -2550,7 +2550,7 @@ function PaniniApp() {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = `mi-album-panini-${new Date().toISOString().slice(0,10)}.json`;
+                  a.download = `mi-album-wc26-${new Date().toISOString().slice(0,10)}.json`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
