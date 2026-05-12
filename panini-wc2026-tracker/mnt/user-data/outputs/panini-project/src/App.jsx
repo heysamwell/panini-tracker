@@ -4,7 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://nvllmcwwektkvgbargzh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_XPfvLzBKz-L_JEKfmw1pIw_aShQ3Ewf";
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+let supabase = null;
+try { supabase = createClient(SUPABASE_URL, SUPABASE_KEY); } catch(e) { console.warn("Supabase init failed", e); }
 
 // Inline SVG icons — no external dependency needed
 const IconBook    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>;
@@ -1689,6 +1690,7 @@ function PaniniApp() {
 
   // Listen to auth changes
   useEffect(()=>{
+    if (!supabase) return;
     supabase.auth.getSession().then(({data:{session}})=> setUser(session?.user ?? null));
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
       setUser(session?.user ?? null);
@@ -1699,23 +1701,19 @@ function PaniniApp() {
 
   // Load from cloud
   const loadFromCloud = async (userId) => {
+    if (!supabase) return;
     const {data} = await supabase.from("albums").select("owned,repeated").eq("user_id",userId).single();
-    if (data) {
-      setOwned(new Set(data.owned||[]));
-      setRepeated(data.repeated||{});
-    }
+    if (data) { setOwned(new Set(data.owned||[])); setRepeated(data.repeated||{}); }
   };
 
   // Save to cloud (debounced)
   const saveToCloud = useCallback((newOwned, newRepeated) => {
-    if (!user) return;
+    if (!user || !supabase) return;
     clearTimeout(syncTimeout.current);
     syncTimeout.current = setTimeout(async ()=>{
       setSyncing(true);
       await supabase.from("albums").upsert({
-        user_id: user.id,
-        owned: [...newOwned],
-        repeated: newRepeated,
+        user_id: user.id, owned: [...newOwned], repeated: newRepeated,
         updated_at: new Date().toISOString(),
       }, {onConflict:"user_id"});
       setSyncing(false);
