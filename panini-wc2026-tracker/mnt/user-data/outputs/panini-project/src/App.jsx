@@ -681,142 +681,6 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
 }
 
 // ── Scan Modal ────────────────────────────────────────────────────────────────
-function ScanModal({ onClose, onApply }) {
-  const fileRef = useRef();
-  const [preview, setPreview] = useState(null);
-  const [b64, setB64] = useState(null);
-  const [mime, setMime] = useState("image/jpeg");
-  const [phase, setPhase] = useState("idle");
-  const [result, setResult] = useState(null);
-  const [action, setAction] = useState("found");
-  const [mode, setMode] = useState("sobre"); // "sobre" = reverso estampitas | "pagina" = página álbum
-  const teamCodes = GROUPS.flatMap(g=>g.teams.map(t=>t.code)).join(", ");
-  const fwcCodes = "FWC0,FWC1,FWC2,FWC3,FWC4,FWC5,FWC6,FWC7,FWC8,FWC9,FWC10,FWC11,FWC12,FWC13,FWC14,FWC15,FWC16,FWC17,FWC18,FWC19";
-  const ccCodes = "CC1,CC2,CC3,CC4,CC5,CC6,CC7,CC8,CC9,CC10,CC11,CC12,CC13,CC14";
-
-  const handleFile = f => {
-    if(!f) return; setMime(f.type||"image/jpeg");
-    const r=new FileReader(); r.onload=e=>{setPreview(e.target.result);setB64(e.target.result.split(",")[1]);setPhase("idle");setResult(null);}; r.readAsDataURL(f);
-  };
-
-  const scan = async () => {
-    if(!b64) return; setPhase("scanning");
-    try {
-      const prompt = mode==="sobre"
-        ? `You are reading the BACK of Panini WC2026 stickers laid on a table. Each sticker has a code printed on its back like "MEX 7", "BRA 14", "FWC 3", "CC 1", etc. Extract ALL sticker codes you can see. Valid team codes: FWC,CC,${teamCodes}. Numbers go from 0-20. Return ONLY JSON with no markdown: {"found":["MEX7","BRA14","FWC3",...]} — combine the team code and number with no space.`
-        : `WC2026 sticker album page. IDs: TEAMCODE+1-20. e.g. MEX1, CZE13. Valid codes: FWC,CC,${teamCodes}. Look for EMPTY slots. Return ONLY JSON: {"found":["MEX1"...],"empty":["MEX2"...]}`;
-
-      const res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:mime,data:b64}},{type:"text",text:prompt}]}]})});
-      const data=await res.json();
-      const text=(data.content||[]).map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
-      const parsed=JSON.parse(text);
-      const valid=arr=>(arr||[]).filter(id=>ALL_IDS.includes(id));
-      if(mode==="sobre") {
-        setResult({found:valid(parsed.found),empty:[]});
-      } else {
-        setResult({found:valid(parsed.found),empty:valid(parsed.empty)});
-      }
-      setPhase("done");
-    } catch { setPhase("error"); }
-  };
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.9)",zIndex:200,display:"flex",alignItems:"flex-start",justifyContent:"center",overflowY:"auto"}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
-      <div style={{background:"#0a0a14",border:"1px solid #2a2a50",borderRadius:16,width:"100%",maxWidth:460,margin:"20px 12px",padding:20}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <div><div style={{fontSize:15,letterSpacing:3,color:"#e8c84a",textTransform:"uppercase"}}>IA Scanner</div><div style={{fontSize:16,fontWeight:"bold"}}>Escanear estampitas</div></div>
-          <button onClick={onClose} style={{background:"none",border:"none",color:"#505060",fontSize:20,cursor:"pointer"}}>✕</button>
-        </div>
-
-        {/* Mode selector */}
-        <div style={{display:"flex",gap:6,marginBottom:14,background:"#080810",borderRadius:10,padding:4}}>
-          <button onClick={()=>{setMode("sobre");setResult(null);setPreview(null);}}
-            style={{flex:1,padding:"8px 0",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600",
-              background:mode==="sobre"?"#1a1a2a":"transparent",color:mode==="sobre"?"#e8c84a":"#404058"}}>
-            📦 Reverso sobre
-          </button>
-          <button onClick={()=>{setMode("pagina");setResult(null);setPreview(null);}}
-            style={{flex:1,padding:"8px 0",borderRadius:8,border:"none",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600",
-              background:mode==="pagina"?"#1a1a2a":"transparent",color:mode==="pagina"?"#e8c84a":"#404058"}}>
-            📖 Página álbum
-          </button>
-        </div>
-
-        <div style={{fontSize:12,color:"#404058",marginBottom:12,padding:"8px 10px",background:"#080810",borderRadius:8,lineHeight:1.6}}>
-          {mode==="sobre"
-            ? "📷 Fotografía el reverso de tus estampitas en la mesa. La IA leerá los códigos (MEX7, BRA14, etc.) y las marcará automáticamente."
-            : "📷 Fotografía una página de tu álbum. La IA detectará las figuritas vacías y pegadas."}
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{display:"none"}} onChange={e=>handleFile(e.target.files[0])}/>
-        {!preview?(
-          <div style={{border:"2px dashed #252540",borderRadius:12,padding:32,textAlign:"center",cursor:"pointer",marginBottom:14}} onClick={()=>fileRef.current.click()}>
-            <div style={{fontSize:40,marginBottom:8}}>📷</div>
-            <div style={{fontSize:16,color:"#808090"}}>Toca para tomar foto</div>
-          </div>
-        ):(
-          <div style={{marginBottom:14}}>
-            <div style={{position:"relative",borderRadius:10,overflow:"hidden",marginBottom:8}}>
-              <img src={preview} alt="" style={{width:"100%",display:"block",maxHeight:260,objectFit:"contain",background:"#111"}}/>
-              {phase==="scanning"&&<div style={{position:"absolute",inset:0,background:"rgba(0,0,0,0.7)",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:8}}><div style={{width:34,height:34,border:"3px solid #e8c84a22",borderTop:"3px solid #e8c84a",borderRadius:"50%",animation:"spin 0.8s linear infinite"}}/><div style={{fontSize:15,color:"#e8c84a"}}>Analizando…</div></div>}
-            </div>
-          </div>
-        )}
-        {phase==="done"&&result&&(
-          <div style={{background:"#0d0d1a",border:"1px solid #202030",borderRadius:10,padding:14,marginBottom:14}}>
-            {mode==="sobre" ? (
-              // Sobre mode — just show found stickers to confirm
-              <div>
-                <div style={{fontSize:13,color:"#60b060",marginBottom:10,fontWeight:"600"}}>
-                  ✓ {result.found.length} estampitas detectadas
-                </div>
-                <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:10}}>
-                  {result.found.map(id=>{
-                    const sec = ALBUM.find(s=>id.startsWith(s.key));
-                    const col = sec?.color||"#e8c84a";
-                    return (
-                      <div key={id} style={{padding:"4px 10px",borderRadius:20,background:col+"22",
-                        border:`1px solid ${col}55`,color:col,fontSize:12,fontWeight:"700"}}>
-                        {id}
-                      </div>
-                    );
-                  })}
-                </div>
-                {result.found.length===0 && (
-                  <div style={{color:"#505060",fontSize:12}}>No se detectaron códigos. Intenta con mejor iluminación o acerca más la cámara al reverso de las estampitas.</div>
-                )}
-              </div>
-            ) : (
-              // Página mode — found/empty with action selector
-              <div>
-                {result.found.length>0&&<div style={{marginBottom:8}}><div style={{fontSize:13,color:"#60b060",marginBottom:3}}>✓ Presentes ({result.found.length})</div><div style={{fontSize:12,color:"#505060",wordBreak:"break-all"}}>{result.found.join(", ")}</div></div>}
-                {result.empty.length>0&&<div style={{marginBottom:8}}><div style={{fontSize:13,color:"#c05050",marginBottom:3}}>○ Vacíos ({result.empty.length})</div><div style={{fontSize:12,color:"#505060",wordBreak:"break-all"}}>{result.empty.join(", ")}</div></div>}
-                {(result.found.length>0||result.empty.length>0)&&(
-                  <div style={{marginTop:10}}>
-                    {[{val:"found",label:`Marcar TENGO (${result.found.length})`,color:"#60b060",bg:"#0a1a0a"},{val:"empty",label:`Marcar FALTAN (${result.empty.length})`,color:"#c05050",bg:"#1a0a0a"},{val:"both",label:"Ambas",color:"#e8c84a",bg:"#1a1a0a"}].map(o=>(
-                      <button key={o.val} onClick={()=>setAction(o.val)} style={{display:"block",width:"100%",marginBottom:5,padding:"7px 10px",borderRadius:7,border:`1px solid ${action===o.val?o.color:o.color+"33"}`,background:action===o.val?o.bg:"transparent",color:o.color,cursor:"pointer",fontSize:13,fontFamily:BODY,textAlign:"left"}}>
-                        {action===o.val?"● ":"○ "}{o.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-        <div style={{display:"flex",gap:8}}>
-          {preview&&phase!=="scanning"&&<button onClick={scan} style={{flex:1,padding:"11px 0",background:"#0e0e28",border:"1px solid #4050a0",borderRadius:10,color:"#8090d0",cursor:"pointer",fontSize:13,fontFamily:BODY}}>{phase==="done"?"↺ Re-analizar":"🔍 Analizar con IA"}</button>}
-          {phase==="done"&&result&&result.found.length>0&&(
-            <button onClick={()=>{onApply(result,mode==="sobre"?"found":action);onClose();}}
-              style={{flex:1,padding:"11px 0",background:"#0a180a",border:"1px solid #40a040",borderRadius:10,color:"#60b060",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
-              ✓ Marcar {result.found.length} estampitas
-            </button>
-          )}
-        </div>
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-      </div>
-    </div>
-  );
-}
-
 // ── Trade code helpers ────────────────────────────────────────────────────────
 // Format: "v1|REPEATS|MISSING"
 // REPEATS: "MEX1:2,BRA3:1,..." (id:count)
@@ -1890,7 +1754,6 @@ function PaniniApp() {
       }
     }
   }, []);
-  const [showScan, setShowScan] = useState(false);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [savedPulse, setSavedPulse] = useState(false);
   const [shareMsg, setShareMsg] = useState(false);
@@ -1968,10 +1831,6 @@ function PaniniApp() {
     });
   }, []);
 
-  const applyScan = (result, action) => {
-    setOwned(p=>{ const n=new Set(p); if(action==="found"||action==="both") result.found.forEach(id=>n.add(id)); if(action==="empty"||action==="both") result.empty.forEach(id=>n.delete(id)); return n; });
-  };
-
   const totalOwned = owned.size;
   const pct = Math.round((totalOwned/TOTAL)*100);
   const missing = useMemo(()=>ALL_IDS.filter(id=>!owned.has(id)),[owned]);
@@ -2039,7 +1898,6 @@ function PaniniApp() {
         button:active { opacity: 0.85; }
       `}</style>
 
-      {showScan && <ScanModal onClose={()=>setShowScan(false)} onApply={applyScan}/>}
       {showQuickEntry && <QuickEntryModal onClose={()=>setShowQuickEntry(false)} allIds={ALL_IDS}
         onMark={(ids)=>ids.forEach(id=>{ if(!owned.has(id)) toggle(id); })}/>}
       {toast && (
