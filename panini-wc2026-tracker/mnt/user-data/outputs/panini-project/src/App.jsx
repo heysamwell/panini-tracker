@@ -1682,11 +1682,19 @@ function PaniniApp() {
   const [showTrade, setShowTrade] = useState(false);
   const [friendData, setFriendData] = useState(null);
 
-  // Auth state
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const syncTimeout = useRef(null);
+  const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [savedPulse, setSavedPulse] = useState(false);
+  const [shareMsg, setShareMsg] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [activeGroup, setActiveGroup] = useState("ALL");
+  const [searchQ, setSearchQ] = useState("");
+  const [toast, setToast] = useState(null);
+  const [expandAll, setExpandAll] = useState(false);
+  const [stickerHighlight, setStickerHighlight] = useState(null);
 
   // Listen to auth changes
   useEffect(()=>{
@@ -1752,14 +1760,6 @@ function PaniniApp() {
       }
     }
   }, []);
-  const [showQuickEntry, setShowQuickEntry] = useState(false);
-  const [savedPulse, setSavedPulse] = useState(false);
-  const [shareMsg, setShareMsg] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [activeGroup, setActiveGroup] = useState("ALL");
-  const [searchQ, setSearchQ] = useState("");
-  const [toast, setToast] = useState(null); // {msg, emoji, color}
-
   const showToast = (msg, emoji, color) => {
     setToast({msg, emoji, color});
     setTimeout(()=>setToast(null), 3500);
@@ -1836,9 +1836,6 @@ function PaniniApp() {
   const missingByTeam = useMemo(()=>{ const m={}; missing.forEach(id=>{ const c=id.replace(/\d+$/,""); if(!m[c])m[c]=[]; m[c].push(id); }); return m; },[missing]);
   const totalRepeatCopies = repeatList.reduce((a,r)=>a+r.count,0);
   const myCode = useMemo(()=>encodeTrade(repeatList, missing),[repeatList, missing]);
-
-  const [expandAll, setExpandAll] = useState(false);
-  const [stickerHighlight, setStickerHighlight] = useState(null);
 
   const visibleSections = useMemo(()=>{
     let secs = ALBUM;
