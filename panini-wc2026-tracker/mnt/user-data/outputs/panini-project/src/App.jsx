@@ -2165,6 +2165,13 @@ function PaniniApp() {
               </a>
             </div>
 
+            {/* Legal disclaimer */}
+            <div style={{textAlign:"center",padding:"10px 8px 4px"}}>
+              <div style={{fontSize:10,color:"#252535",lineHeight:1.7}}>
+                Unofficial fan-made tracker. Not affiliated with FIFA, Panini or any official tournament partners. All team names, flags and tournament references are used for informational purposes only.
+              </div>
+            </div>
+
           </div>
         )}
 
