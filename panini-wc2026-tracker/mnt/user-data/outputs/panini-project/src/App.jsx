@@ -2304,125 +2304,6 @@ function PaniniApp() {
               </div>
             </div>
 
-            {/* Progress by group */}
-            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
-              <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
-                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por sección</div>
-              </div>
-              <div style={{padding:"8px 16px 12px"}}>
-                {/* FWC sections */}
-                {[{key:"FWCI",label:"FWC · Intro",flag:"🌍"},{key:"FWCH",label:"FWC · Historia",flag:"🏆"}].map(({key,label,flag})=>{
-                  const sec = ALBUM.find(s=>s.key===key);
-                  if (!sec) return null;
-                  const have = sec.stickers.filter(st=>owned.has(st.id)).length;
-                  const total = sec.stickers.length;
-                  const gPct = Math.round((have/total)*100);
-                  return (
-                    <div key={key} style={{marginBottom:10}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div style={{width:8,height:8,borderRadius:4,background:"#e8c84a",flexShrink:0}}/>
-                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>{flag} {label}</span>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:12,color:"#e8c84a",fontWeight:"700"}}>{gPct}%</span>
-                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
-                        </div>
-                      </div>
-                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
-                        <div style={{height:"100%",width:`${gPct}%`,background:"#e8c84a",borderRadius:3,transition:"width 0.5s"}}/>
-                      </div>
-                    </div>
-                  );
-                })}
-                {/* Groups A-L */}
-                {GROUPS.map(g=>{
-                  const teamSecs = ALBUM.filter(s=>s.group===g.id);
-                  const have = teamSecs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
-                  const total = teamSecs.reduce((a,s)=>a+s.stickers.length,0);
-                  const gPct = Math.round((have/total)*100);
-                  const col = GROUP_COLORS[g.id];
-                  return (
-                    <div key={g.id} style={{marginBottom:10}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div style={{width:8,height:8,borderRadius:4,background:col,flexShrink:0}}/>
-                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>Grupo {g.id}</span>
-                          <span style={{fontSize:11,color:"#404058"}}>{g.teams.map(t=>t.flag).join(" ")}</span>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:12,color:col,fontWeight:"700"}}>{gPct}%</span>
-                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
-                        </div>
-                      </div>
-                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
-                        <div style={{height:"100%",width:`${gPct}%`,background:col,borderRadius:3,transition:"width 0.5s"}}/>
-                      </div>
-                    </div>
-                  );
-                })}
-                {/* Coca-Cola */}
-                {(()=>{
-                  const sec = ALBUM.find(s=>s.special==="cocacola");
-                  if (!sec) return null;
-                  const have = sec.stickers.filter(st=>owned.has(st.id)).length;
-                  const total = sec.stickers.length;
-                  const gPct = Math.round((have/total)*100);
-                  return (
-                    <div style={{marginBottom:10}}>
-                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <div style={{width:8,height:8,borderRadius:4,background:"#e8302a",flexShrink:0}}/>
-                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>🥤 Coca-Cola</span>
-                        </div>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:12,color:"#e8302a",fontWeight:"700"}}>{gPct}%</span>
-                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
-                        </div>
-                      </div>
-                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
-                        <div style={{height:"100%",width:`${gPct}%`,background:"#e8302a",borderRadius:3,transition:"width 0.5s"}}/>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-
-            {/* Top/bottom groups */}
-            {(() => {
-              const groupStats = GROUPS.map(g=>{
-                const teamSecs = ALBUM.filter(s=>s.group===g.id);
-                const have = teamSecs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
-                const total = teamSecs.reduce((a,s)=>a+s.stickers.length,0);
-                return { id:g.id, pct:Math.round((have/total)*100), teams:g.teams, col:GROUP_COLORS[g.id] };
-              }).sort((a,b)=>b.pct-a.pct);
-              const top = groupStats.slice(0,3);
-              const bot = groupStats.slice(-3).reverse();
-              return (
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-                  <div style={{background:"#090f0d",border:"1px solid #1a3a28",borderRadius:12,padding:12}}>
-                    <div style={{fontSize:11,color:"#50d0a0",fontWeight:"700",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>🏆 Más avanzados</div>
-                    {top.map(g=>(
-                      <div key={g.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                        <span style={{fontSize:12,color:"#a0c0a8"}}>Grupo {g.id} {g.teams.map(t=>t.flag).join("")}</span>
-                        <span style={{fontSize:12,fontWeight:"700",color:g.col}}>{g.pct}%</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{background:"#0f090d",border:"1px solid #3a1a28",borderRadius:12,padding:12}}>
-                    <div style={{fontSize:11,color:"#e05050",fontWeight:"700",letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>📌 Más faltante</div>
-                    {bot.map(g=>(
-                      <div key={g.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                        <span style={{fontSize:12,color:"#c0a0a8"}}>Grupo {g.id} {g.teams.map(t=>t.flag).join("")}</span>
-                        <span style={{fontSize:12,fontWeight:"700",color:g.col}}>{g.pct}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-
             {/* ── NIVEL DE SUERTE ── */}
             {(()=>{
               const totalCopies = Object.values(repeated).reduce((a,v)=>a+v,0);
@@ -2520,6 +2401,88 @@ function PaniniApp() {
 
             {/* Share Card */}
             <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
+
+            {/* Progress by group */}
+            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
+              <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
+                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por sección</div>
+              </div>
+              <div style={{padding:"8px 16px 12px"}}>
+                {[{key:"FWCI",label:"FWC · Intro",flag:"🌍"},{key:"FWCH",label:"FWC · Historia",flag:"🏆"}].map(({key,label,flag})=>{
+                  const sec = ALBUM.find(s=>s.key===key);
+                  if (!sec) return null;
+                  const have = sec.stickers.filter(st=>owned.has(st.id)).length;
+                  const total = sec.stickers.length;
+                  const gPct = Math.round((have/total)*100);
+                  return (
+                    <div key={key} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:4,background:"#e8c84a",flexShrink:0}}/>
+                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>{flag} {label}</span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:12,color:"#e8c84a",fontWeight:"700"}}>{gPct}%</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${gPct}%`,background:"#e8c84a",borderRadius:3,transition:"width 0.5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+                {GROUPS.map(g=>{
+                  const teamSecs = ALBUM.filter(s=>s.group===g.id);
+                  const have = teamSecs.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);
+                  const total = teamSecs.reduce((a,s)=>a+s.stickers.length,0);
+                  const gPct = Math.round((have/total)*100);
+                  const col = GROUP_COLORS[g.id];
+                  return (
+                    <div key={g.id} style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:4,background:col,flexShrink:0}}/>
+                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>Grupo {g.id}</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{g.teams.map(t=>t.flag).join(" ")}</span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:12,color:col,fontWeight:"700"}}>{gPct}%</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${gPct}%`,background:col,borderRadius:3,transition:"width 0.5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+                {(()=>{
+                  const sec = ALBUM.find(s=>s.special==="cocacola");
+                  if (!sec) return null;
+                  const have = sec.stickers.filter(st=>owned.has(st.id)).length;
+                  const total = sec.stickers.length;
+                  const gPct = Math.round((have/total)*100);
+                  return (
+                    <div style={{marginBottom:10}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:8,height:8,borderRadius:4,background:"#e8302a",flexShrink:0}}/>
+                          <span style={{fontSize:12,color:"#a0a0c0",fontWeight:"600"}}>🥤 Coca-Cola</span>
+                        </div>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:12,color:"#e8302a",fontWeight:"700"}}>{gPct}%</span>
+                          <span style={{fontSize:11,color:"#404058"}}>{have}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{height:6,background:"#111120",borderRadius:3,overflow:"hidden"}}>
+                        <div style={{height:"100%",width:`${gPct}%`,background:"#e8302a",borderRadius:3,transition:"width 0.5s"}}/>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Mis datos</div>
               <div style={{fontSize:12,color:"#505068",marginBottom:12,lineHeight:1.6}}>
