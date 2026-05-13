@@ -33,7 +33,7 @@ const GROUPS = [
   { id:"B", teams:[{code:"CAN",name:"Canada",flag:"🇨🇦"},{code:"BIH",name:"Bosnia-Herzegovina",flag:"🇧🇦"},{code:"QAT",name:"Qatar",flag:"🇶🇦"},{code:"SUI",name:"Switzerland",flag:"🇨🇭"}] },
   { id:"C", teams:[{code:"BRA",name:"Brazil",flag:"🇧🇷"},{code:"MAR",name:"Morocco",flag:"🇲🇦"},{code:"HAI",name:"Haiti",flag:"🇭🇹"},{code:"SCO",name:"Scotland",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"}] },
   { id:"D", teams:[{code:"USA",name:"USA",flag:"🇺🇸"},{code:"PAR",name:"Paraguay",flag:"🇵🇾"},{code:"AUS",name:"Australia",flag:"🇦🇺"},{code:"TUR",name:"Türkiye",flag:"🇹🇷"}] },
-  { id:"E", teams:[{code:"GER",name:"Germany",flag:"🇩🇪"},{code:"CUW",name:"Curaçao",flag:"🏝️"},{code:"CIV",name:"Côte d'Ivoire",flag:"🇨🇮"},{code:"ECU",name:"Ecuador",flag:"🇪🇨"}] },
+  { id:"E", teams:[{code:"GER",name:"Germany",flag:"🇩🇪"},{code:"CUW",name:"Curaçao",flag:"🇨🇼"},{code:"CIV",name:"Côte d'Ivoire",flag:"🇨🇮"},{code:"ECU",name:"Ecuador",flag:"🇪🇨"}] },
   { id:"F", teams:[{code:"NED",name:"Netherlands",flag:"🇳🇱"},{code:"JPN",name:"Japan",flag:"🇯🇵"},{code:"SWE",name:"Sweden",flag:"🇸🇪"},{code:"TUN",name:"Tunisia",flag:"🇹🇳"}] },
   { id:"G", teams:[{code:"BEL",name:"Belgium",flag:"🇧🇪"},{code:"EGV",name:"Egypt",flag:"🇪🇬"},{code:"IRN",name:"IR Iran",flag:"🇮🇷"},{code:"NZL",name:"New Zealand",flag:"🇳🇿"}] },
   { id:"H", teams:[{code:"ESP",name:"Spain",flag:"🇪🇸"},{code:"CPV",name:"Cabo Verde",flag:"🇨🇻"},{code:"KSA",name:"Saudi Arabia",flag:"🇸🇦"},{code:"URU",name:"Uruguay",flag:"🇺🇾"}] },
@@ -47,9 +47,9 @@ const GROUP_COLORS = { A:"#22c55e",B:"#3b82f6",C:"#f59e0b",D:"#a855f7",E:"#ef444
 const buildAlbum = () => {
   const secs = [];
   secs.push({ key:"FWCI", name:"FWC · Intro", flag:"🌍", group:null, color:"#e8c84a", special:"fwc",
-    stickers: Array.from({length:10},(_,i)=>({id:`FWC${i}`,num:i})) });
+    stickers: Array.from({length:9},(_,i)=>({id:`FWC${i}`,num:i})) });
   secs.push({ key:"FWCH", name:"FWC · Historia", flag:"🏆", group:null, color:"#e8c84a", special:"fwc",
-    stickers: Array.from({length:10},(_,i)=>({id:`FWC${i+10}`,num:i+10})) });
+    stickers: Array.from({length:11},(_,i)=>({id:`FWC${i+9}`,num:i+9})) });
   GROUPS.forEach(g => g.teams.forEach(t =>
     secs.push({ key:t.code, name:t.name, flag:t.flag, group:g.id, color:GROUP_COLORS[g.id],
       stickers: Array.from({length:20},(_,i)=>({id:`${t.code}${i+1}`,num:i+1})) })
@@ -396,7 +396,7 @@ function FWCSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepeat
             {isFWCI ? "FWC · INTRO" : "FWC · HISTORIA"}
           </div>
           <div style={{fontSize:12,color:"#e8c84a88",fontFamily:BODY}}>
-            {isFWCI ? "FWC0 – FWC9" : "FWC10 – FWC19"}
+            {isFWCI ? "FWC0 – FWC8" : "FWC9 – FWC19"}
           </div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
