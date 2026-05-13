@@ -2573,7 +2573,8 @@ function PaniniApp() {
             {/* Compartir por WhatsApp */}
             {(()=>{
               const top = GROUPS.map(g=>{const s=ALBUM.filter(s=>s.group===g.id);const h=s.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);const t=s.reduce((a,s)=>a+s.stickers.length,0);return{id:g.id,pct:Math.round((h/t)*100)};}).sort((a,b)=>b.pct-a.pct)[0];
-              const txt = `⚽ Mi progreso Album Tracker WC26\n📊 ${pct}% completado (${owned.size}/994)\n✅ Tengo: ${owned.size} | ❌ Faltan: ${missing.length} | 🔄 Repetidas: ${repeatList.length}\n🏆 Top grupo: ${top?`Grupo ${top.id} (${top.pct}%)`:"—"}\n📅 ${streakData.streak || 0} días de racha 🔥\n📱 panini-tracker-flame.vercel.app`;
+              const topLabel = top ? "Grupo "+top.id+" ("+top.pct+"%)" : "—";
+              const txt = "⚽ Mi progreso Album Tracker WC26\n📊 "+pct+"% completado ("+owned.size+"/994)\n✅ Tengo: "+owned.size+" | ❌ Faltan: "+missing.length+" | 🔄 Repetidas: "+repeatList.length+"\n🏆 Top grupo: "+topLabel+"\n📅 "+(streakData.streak || 0)+" días de racha 🔥\n📱 panini-tracker-flame.vercel.app";
               return (
                 <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:14,marginBottom:14}}>
                   <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Compartir progreso</div>
