@@ -2489,8 +2489,6 @@ function PaniniApp() {
 
             {/* Share Card */}
             <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
-
-            {/* Progress by group */}
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
               <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
                 <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por sección</div>
@@ -2571,7 +2569,31 @@ function PaniniApp() {
                 })()}
               </div>
             </div>
-            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
+
+            {/* Compartir por WhatsApp */}
+            {(()=>{
+              const top = GROUPS.map(g=>{const s=ALBUM.filter(s=>s.group===g.id);const h=s.reduce((a,s)=>a+s.stickers.filter(st=>owned.has(st.id)).length,0);const t=s.reduce((a,s)=>a+s.stickers.length,0);return{id:g.id,pct:Math.round((h/t)*100)};}).sort((a,b)=>b.pct-a.pct)[0];
+              const txt = `⚽ Mi progreso Album Tracker WC26\n📊 ${pct}% completado (${owned.size}/994)\n✅ Tengo: ${owned.size} | ❌ Faltan: ${missing.length} | 🔄 Repetidas: ${repeatList.length}\n🏆 Top grupo: ${top?`Grupo ${top.id} (${top.pct}%)`:"—"}\n📅 ${streakData.streak || 0} días de racha 🔥\n📱 panini-tracker-flame.vercel.app`;
+              return (
+                <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:14,marginBottom:14}}>
+                  <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Compartir progreso</div>
+                  <div style={{background:"#080810",border:"1px solid #1a1a2a",borderRadius:8,padding:"10px 12px",marginBottom:10,fontSize:11,color:"#606078",lineHeight:1.7,fontFamily:"monospace",whiteSpace:"pre-line"}}>
+                    {txt}
+                  </div>
+                  <button onClick={()=>navigator.clipboard?.writeText(txt)}
+                    style={{width:"100%",padding:"11px 0",background:"linear-gradient(135deg,#0a2018,#061410)",
+                      border:"1px solid #2a6040",borderRadius:10,color:"#50d0a0",cursor:"pointer",
+                      fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
+                    ⎘ Copiar para WhatsApp
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* Share Card */}
+            <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
+
+            {/* Progress by group */}
               <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Mis datos</div>
               <div style={{fontSize:12,color:"#505068",marginBottom:12,lineHeight:1.6}}>
                 Exporta tu progreso para abrirlo en otro dispositivo o guardarlo como respaldo.
