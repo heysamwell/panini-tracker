@@ -1687,6 +1687,7 @@ function PaniniApp() {
   const [syncing, setSyncing] = useState(false);
   const syncTimeout = useRef(null);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
+  const [repeatModal, setRepeatModal] = useState(null);
   const [savedPulse, setSavedPulse] = useState(false);
   const [shareMsg, setShareMsg] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
