@@ -69,8 +69,32 @@ ALBUM.forEach(s=>s.stickers.forEach(st=>{ CODE_TO_SECTION[st.id]=s; }));
 
 // ── Storage ───────────────────────────────────────────────────────────────────
 const SK = "panini_wc2026_v3";
+const SK_STREAK = "panini_streak_v1";
+
 const loadData = () => { try { const r=localStorage.getItem(SK); return r?JSON.parse(r):{owned:[],repeated:{}}; } catch { return {owned:[],repeated:{}}; }};
 const saveData = (o,r) => { try { localStorage.setItem(SK,JSON.stringify({owned:[...o],repeated:r})); } catch {} };
+
+const loadStreak = () => {
+  try {
+    const r = localStorage.getItem(SK_STREAK);
+    return r ? JSON.parse(r) : { firstDay: null, lastDay: null, streak: 0, maxStreak: 0 };
+  } catch { return { firstDay: null, lastDay: null, streak: 0, maxStreak: 0 }; }
+};
+
+const saveStreak = (data) => { try { localStorage.setItem(SK_STREAK, JSON.stringify(data)); } catch {} };
+
+const updateStreak = () => {
+  const today = new Date().toISOString().slice(0,10);
+  const s = loadStreak();
+  if (!s.firstDay) s.firstDay = today;
+  if (s.lastDay === today) return s; // already updated today
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  s.streak = s.lastDay === yesterday ? s.streak + 1 : 1;
+  s.maxStreak = Math.max(s.maxStreak, s.streak);
+  s.lastDay = today;
+  saveStreak(s);
+  return s;
+};
 
 // ── PDF Generator (pure JS, no library needed) ───────────────────────────────
 // Uses jsPDF from CDN
@@ -1688,6 +1712,7 @@ function PaniniApp() {
   const syncTimeout = useRef(null);
   const [showQuickEntry, setShowQuickEntry] = useState(false);
   const [repeatModal, setRepeatModal] = useState(null);
+  const [streakData, setStreakData] = useState(()=>loadStreak());
   const [savedPulse, setSavedPulse] = useState(false);
   const [shareMsg, setShareMsg] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
@@ -1769,6 +1794,8 @@ function PaniniApp() {
   useEffect(()=>{
     saveData(owned,repeated);
     saveToCloud(owned,repeated);
+    const newStreak = updateStreak();
+    setStreakData(newStreak);
     setSavedPulse(true);
     const t=setTimeout(()=>setSavedPulse(false),1200);
     return()=>clearTimeout(t);
@@ -2321,6 +2348,49 @@ function PaniniApp() {
                 ))}
               </div>
             </div>
+
+            {/* ── RACHA ── */}
+            {(()=>{
+              const today = new Date().toISOString().slice(0,10);
+              const firstDay = streakData.firstDay || today;
+              const daysSince = Math.floor((new Date(today) - new Date(firstDay)) / 86400000) + 1;
+              const streak = streakData.streak || 0;
+              const maxStreak = streakData.maxStreak || 0;
+              const lastDay = streakData.lastDay;
+              const isActiveToday = lastDay === today;
+              const isActiveYesterday = lastDay === new Date(Date.now()-86400000).toISOString().slice(0,10);
+
+              return (
+                <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
+                  <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
+                    <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>📅 Mi trayectoria</div>
+                  </div>
+                  <div style={{padding:"12px 16px"}}>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:8,marginBottom:10}}>
+                      <div style={{background:"#111120",borderRadius:10,padding:"10px 6px",textAlign:"center"}}>
+                        <div style={{fontSize:28,fontWeight:"400",color:"#e8c84a",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{daysSince}</div>
+                        <div style={{fontSize:10,color:"#404058",marginTop:4,textTransform:"uppercase",letterSpacing:1}}>días coleccionando</div>
+                      </div>
+                      <div style={{background:"#111120",borderRadius:10,padding:"10px 6px",textAlign:"center"}}>
+                        <div style={{fontSize:28,fontWeight:"400",color: isActiveToday?"#50d0a0":isActiveYesterday?"#f97316":"#606078",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>
+                          {streak}{isActiveToday?"🔥":""}
+                        </div>
+                        <div style={{fontSize:10,color:"#404058",marginTop:4,textTransform:"uppercase",letterSpacing:1}}>racha actual</div>
+                      </div>
+                      <div style={{background:"#111120",borderRadius:10,padding:"10px 6px",textAlign:"center"}}>
+                        <div style={{fontSize:28,fontWeight:"400",color:"#a855f7",fontFamily:DISPLAY,letterSpacing:2,lineHeight:1}}>{maxStreak}</div>
+                        <div style={{fontSize:10,color:"#404058",marginTop:4,textTransform:"uppercase",letterSpacing:1}}>mejor racha</div>
+                      </div>
+                    </div>
+                    {lastDay && (
+                      <div style={{fontSize:11,color:"#303048",textAlign:"center"}}>
+                        {isActiveToday ? "🟢 Activo hoy" : `Último registro: ${lastDay}`}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ── NIVEL DE SUERTE ── */}
             {(()=>{
