@@ -2163,16 +2163,16 @@ function PaniniApp() {
 
             {/* ── DONACIÓN ── */}
             <div style={{background:"linear-gradient(135deg,#1a1008,#120c04)",border:"1px solid #3a2808",borderRadius:14,padding:18,marginBottom:12,textAlign:"center"}}>
-              <div style={{fontSize:28,marginBottom:8}}>☕</div>
-              <div style={{fontSize:15,fontWeight:"bold",color:"#f0b840",marginBottom:8}}>¿Te fue útil el tracker?</div>
+              <div style={{fontSize:28,marginBottom:8}}>🫙</div>
+              <div style={{fontSize:15,fontWeight:"bold",color:"#f0b840",marginBottom:8}}>¿Te ayudó a completar tu álbum?</div>
               <div style={{fontSize:13,color:"#806040",lineHeight:1.7,marginBottom:14}}>
-                Invítame un café si te ayudó a completar tu álbum.
+                Ayúdame a completar el mío y regálame un sobrecito ⚽
               </div>
               <a href="https://paypal.me/awesombroso" target="_blank" rel="noopener noreferrer"
                 style={{display:"inline-block",padding:"12px 24px",
                   background:"linear-gradient(135deg,#003087,#009cde)",
                   borderRadius:12,color:"#fff",fontSize:14,fontWeight:"bold",textDecoration:"none"}}>
-                ☕ Invitar un café
+                🎁 Regalar un sobrecito
               </a>
             </div>
 
