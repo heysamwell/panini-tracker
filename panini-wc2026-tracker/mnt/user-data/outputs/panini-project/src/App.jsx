@@ -2594,7 +2594,8 @@ function PaniniApp() {
             {/* Share Card */}
             <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
 
-            {/* Progress by group */}
+            {/* Export / Import */}
+            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Mis datos</div>
               <div style={{fontSize:12,color:"#505068",marginBottom:12,lineHeight:1.6}}>
                 Exporta tu progreso para abrirlo en otro dispositivo o guardarlo como respaldo.
@@ -2612,7 +2613,7 @@ function PaniniApp() {
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = `mi-album-wc26-${new Date().toISOString().slice(0,10)}.json`;
+                  a.download = "mi-album-wc26-"+new Date().toISOString().slice(0,10)+".json";
                   a.click();
                   URL.revokeObjectURL(url);
                 }}
