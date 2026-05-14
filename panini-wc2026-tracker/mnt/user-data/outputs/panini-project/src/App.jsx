@@ -2888,14 +2888,6 @@ function PaniniApp() {
         {tab==="cambios"&&(
           <div className="tab-content">
 
-            {/* ── MI QR DE CAMBIOS ── */}
-            <QRMarket repeatList={repeatList} missing={missing} />
-
-            <FiguritasImporter myRepeats={repeatList} myMissing={missing}
-              onImport={(data)=>{ setOwned(new Set(data.owned)); setRepeated(data.repeated); }}/>
-
-            {/* Ver perfil */}
-
             {/* ── STATS ── */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
               <div style={{background:"#0c0c18",border:"1px solid #1a3a28",borderRadius:10,padding:12,textAlign:"center"}}>
@@ -2904,9 +2896,16 @@ function PaniniApp() {
               </div>
               <div style={{background:"#0c0c18",border:"1px solid #1a2a3a",borderRadius:10,padding:12,textAlign:"center"}}>
                 <div style={{fontSize:28,fontWeight:"400",color:"#8090d0",fontFamily:DISPLAY,letterSpacing:2}}>{missing.length}</div>
-                <div style={{fontSize:15,color:"#405060",letterSpacing:1,textTransform:"uppercase",marginTop:2}}>Necesito</div>
+                <div style={{fontSize:12,color:"#405060",letterSpacing:1,textTransform:"uppercase",marginTop:2}}>Necesito</div>
               </div>
             </div>
+
+            {/* ── MI QR DE CAMBIOS ── */}
+            <QRMarket repeatList={repeatList} missing={missing} />
+
+            {/* ── IMPORTAR DESDE OTRA APP ── */}
+            <FiguritasImporter myRepeats={repeatList} myMissing={missing}
+              onImport={(data)=>{ setOwned(new Set(data.owned)); setRepeated(data.repeated); }}/>
 
             {/* ── VER LINK DE AMIGO ── */}
             <div style={{background:"#0e0e1a",border:"1px solid #2a2a40",borderRadius:14,padding:18,marginBottom:12}}>
