@@ -2624,6 +2624,9 @@ function PaniniApp() {
               const totalCopies = Object.values(repeated).reduce((a,v)=>a+v,0);
               const totalStickers = owned.size + totalCopies;
               const ratio = totalStickers > 0 ? owned.size / totalStickers : 0;
+              const progress = owned.size / 994; // % del álbum completado
+              // Combine: 60% peso en ratio único/repetidas, 40% en progreso real
+              const baseScore = Math.round((ratio * 0.6 + progress * 0.4) * 100);
               if (owned.size === 0) return (
                 <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:18,marginBottom:14,textAlign:"center"}}>
                   <div style={{fontSize:13,color:"#606078",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"600"}}>🎲 Nivel de suerte</div>
@@ -2646,7 +2649,7 @@ function PaniniApp() {
               ];
               const rareOwned = RARE.filter(r=>owned.has(r.id));
               const rareBonusPct = rareOwned.length * 3;
-              const luckScore = Math.min(100, Math.round(ratio * 100) + rareBonusPct);
+              const luckScore = Math.min(100, baseScore + rareBonusPct);
 
               const levels = [
                 {min:90, emoji:"🍀", label:"Legendario",         color:"#e8c84a", msg:"El álbum te ama. Naciste con suerte."},
