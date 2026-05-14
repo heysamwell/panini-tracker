@@ -337,16 +337,15 @@ function RepeatModal({ id, count, color, onSet, onClose }) {
 
 // ── Sticker box ───────────────────────────────────────────────────────────────
 function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRepeat, highlight }) {
-  size = size || "md";
   const has = owned.has(id);
   const rep = repeated[id] || 0;
   const [pressing, setPressing] = useState(false);
   const [justMarked, setJustMarked] = useState(false);
-  const minH = size==="lg" ? 90 : size==="md" ? 72 : 56;
-  const numFs = size==="lg" ? 18 : size==="md" ? 15 : 12;
+
   const bg   = highlight ? "#2a2a0a" : has ? (rep>0 ? "#2a1a6e" : color+"22") : "#0d0d1a";
-  const bCol = highlight ? "#e8c84a"  : has ? (rep>0 ? "#8060e0" : color)     : "#252535";
-  const textC= highlight ? "#e8c84a"  : has ? (rep>0 ? "#c0a0ff" : color)     : "#35354a";
+  const bCol = highlight ? "#e8c84a" : has ? (rep>0 ? "#8060e0" : color)      : "#252535";
+  const textC= highlight ? "#e8c84a" : has ? (rep>0 ? "#c0a0ff" : color)      : "#35354a";
+  const idFs = id.length > 5 ? 8 : id.length > 4 ? 9 : 10;
 
   const handleToggle = () => {
     if (!has) { setJustMarked(true); setTimeout(()=>setJustMarked(false), 400); }
@@ -354,45 +353,40 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
   };
 
   return (
-    <div id={"sticker-"+id} style={{width:"100%",minHeight:minH,background:bg,border:"1.5px solid "+bCol,borderRadius:8,
-      display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
-      position:"relative",fontFamily:BODY,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",
-      transform: pressing ? "scale(0.94)" : justMarked ? "scale(1.06)" : "scale(1)",
-      boxShadow: highlight ? `0 0 16px #e8c84a88` : justMarked ? `0 0 12px ${color}66` : "none",
-      transition:"transform 0.12s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s"}}>
+    <div id={"sticker-"+id}
+      style={{
+        width:"100%", height:64,
+        background:bg, border:"1.5px solid "+bCol, borderRadius:8,
+        display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"space-between",
+        position:"relative", fontFamily:BODY, overflow:"hidden",
+        userSelect:"none", WebkitUserSelect:"none",
+        transform: pressing ? "scale(0.94)" : justMarked ? "scale(1.06)" : "scale(1)",
+        boxShadow: highlight ? "0 0 16px #e8c84a88" : justMarked ? "0 0 12px "+color+"66" : "none",
+        transition:"transform 0.12s ease, box-shadow 0.2s ease, background 0.2s, border-color 0.2s",
+        cursor:"pointer",
+      }}
+      onClick={handleToggle}
+      onPointerDown={()=>setPressing(true)}
+      onPointerUp={()=>setPressing(false)}
+      onPointerLeave={()=>setPressing(false)}>
 
-      {/* Main tap area */}
-      <div onClick={handleToggle}
-        onPointerDown={()=>setPressing(true)}
-        onPointerUp={()=>setPressing(false)}
-        onPointerLeave={()=>setPressing(false)}
-        style={{flex:1,width:"100%",display:"flex",flexDirection:"column",alignItems:"center",
-          justifyContent:"center",gap:2,cursor:"pointer",
-          padding: has ? "6px 2px 20px" : "6px 2px"}}>
-        <div style={{fontSize:numFs,fontWeight:"900",color:textC,lineHeight:1,
-          transition:"color 0.2s"}}>{num}</div>
-        <div style={{fontSize:14,color:has ? color+"bb" : "#252535",letterSpacing:0.5,fontWeight:"bold",
-          transition:"color 0.2s"}}>{id}</div>
-        {rep>0 && (
-          <div style={{background:"#1a0a40",border:"1px solid #6040b0",borderRadius:4,
-            padding:"1px 5px",fontSize:16,color:"#c0a0ff",fontWeight:"bold",marginTop:1}}>
-            {"\xd7"}{rep+1}
-          </div>
-        )}
+      {/* Top: number */}
+      <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{fontSize:15,fontWeight:"900",color:textC,lineHeight:1,transition:"color 0.2s"}}>{num}</div>
       </div>
 
-      {/* Rep strip */}
-      {has && (
-        <div onClick={e=>{e.stopPropagation();onOpenRepeat(id);}}
-          style={{position:"absolute",bottom:0,left:0,right:0,
-            background: rep>0 ? "#2a1060" : color+"18",
-            borderTop:"1px solid "+(rep>0 ? "#6040b0" : color+"33"),
-            padding:"2px 0",textAlign:"center",cursor:"pointer",
-            fontSize:10,color:rep>0 ? "#c0a0ff" : color+"88",
-            fontWeight:"400",letterSpacing:0.2,transition:"background 0.2s"}}>
-          {rep>0 ? ("\u25c8 "+rep+" extra") : "+ repetida"}
-        </div>
-      )}
+      {/* Bottom: ID + rep badge — always same height */}
+      <div style={{width:"100%",height:20,display:"flex",alignItems:"center",justifyContent:"center",
+        background: rep>0 ? "#2a1060" : has ? color+"18" : "#0a0a14",
+        borderTop:"1px solid "+(rep>0 ? "#6040b0" : has ? color+"33" : "#1a1a28"),
+        gap:3, flexShrink:0}}
+        onClick={e=>{ if(has){e.stopPropagation();onOpenRepeat(id);} }}>
+        <div style={{fontSize:idFs,fontWeight:"700",color:rep>0?"#c0a0ff":textC,letterSpacing:0.3,lineHeight:1}}>{id}</div>
+        {rep>0 && (
+          <div style={{fontSize:8,fontWeight:"900",color:"#c0a0ff",background:"#4a2090",
+            borderRadius:3,padding:"0 3px",lineHeight:"14px"}}>×{rep+1}</div>
+        )}
+      </div>
     </div>
   );
 }
