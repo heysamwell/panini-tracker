@@ -1206,6 +1206,219 @@ function FriendLinkInput({ myRepeats, myMissing, preloaded }) {
 
 // ── QR Code generator (pure JS, no library) ───────────────────────────────────
 // ── QR Market Component ───────────────────────────────────────────────────────
+// ── Figuritas App Parser ──────────────────────────────────────────────────────
+const FLAG_TO_CODE = {
+  "🇲🇽":"MEX","🇿🇦":"RSA","🇰🇷":"KOR","🇨🇿":"CZE",
+  "🇨🇦":"CAN","🇧🇦":"BIH","🇶🇦":"QAT","🇨🇭":"SUI",
+  "🇧🇷":"BRA","🇲🇦":"MAR","🇭🇹":"HAI","🏴󠁧󠁢󠁳󠁣󠁴󠁿":"SCO",
+  "🇺🇸":"USA","🇵🇾":"PAR","🇦🇺":"AUS","🇹🇷":"TUR",
+  "🇩🇪":"GER","🇨🇼":"CUW","🇨🇮":"CIV","🇪🇨":"ECU",
+  "🇳🇱":"NED","🇯🇵":"JPN","🇸🇪":"SWE","🇹🇳":"TUN",
+  "🇧🇪":"BEL","🇪🇬":"EGY","🇮🇷":"IRN","🇳🇿":"NZL",
+  "🇪🇸":"ESP","🇨🇻":"CPV","🇸🇦":"KSA","🇺🇾":"URU",
+  "🇫🇷":"FRA","🇸🇳":"SEN","🇮🇶":"IRQ","🇳🇴":"NOR",
+  "🇦🇷":"ARG","🇩🇿":"ALG","🇦🇹":"AUT","🇯🇴":"JOR",
+  "🇵🇹":"POR","🇨🇩":"COD","🇺🇿":"UZB","🇨🇴":"COL",
+  "🏴󠁧󠁢󠁥󠁮󠁧󠁿":"ENG","🇭🇷":"CRO","🇬🇭":"GHA","🇵🇦":"PAN",
+  "🥤":"CC",
+  "🏆":"FWCH","🌎":"FWCI","📜":"FWCH",
+};
+
+function parseFiguritasApp(text) {
+  const owned = [];
+  const repeated = {};
+  const missing = [];
+  let section = null; // "missing" | "repeated"
+
+  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
+
+  for (const line of lines) {
+    const lw = line.toLowerCase();
+    if (lw.includes("me faltan") || lw.includes("i need") || lw.includes("necesito")) { section="missing"; continue; }
+    if (lw.includes("repetidas") || lw.includes("swaps") || lw.includes("cambios") || lw.includes("me sobran")) { section="repeated"; continue; }
+    if (lw.startsWith("descarga") || lw.startsWith("download") || lw.startsWith("http")) continue;
+    if (lw.includes("figuritas app") || lw.includes("usa ")) continue;
+
+    // Match: "MEX 🇲🇽: 1, 2, 3" or "FWC 🏆: 2" or "CC 🥤: 10"
+    const match = line.match(/^([A-Z]+\s*)?(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*[:\-]\s*([\d,\s]+)/u);
+    if (!match) continue;
+
+    const flagChar = match[2];
+    const numsStr = match[3];
+    const nums = numsStr.split(",").map(n=>n.trim()).filter(Boolean).map(Number).filter(n=>!isNaN(n));
+
+    // Resolve code from flag
+    let code = FLAG_TO_CODE[flagChar];
+    if (!code) continue;
+
+    // FWC special: map to FWC0-FWC8 (FWCI) or FWC9-FWC19 (FWCH)
+    const isFWCI = code === "FWCI";
+    const isFWCH = code === "FWCH";
+
+    for (const num of nums) {
+      let id;
+      if (isFWCI) id = "FWC"+num;
+      else if (isFWCH) id = "FWC"+(num < 9 ? num+9 : num); // offset Historia
+      else id = code+num;
+
+      if (!ALL_IDS.includes(id)) continue;
+
+      if (section === "missing") {
+        missing.push(id);
+      } else if (section === "repeated") {
+        repeated[id] = (repeated[id]||0)+1;
+        if (!owned.includes(id)) owned.push(id);
+      }
+    }
+  }
+
+  // owned = everything NOT in missing (rough approximation)
+  const allOwned = ALL_IDS.filter(id=>!missing.includes(id));
+
+  return { owned: allOwned, repeated, missing, repeatList: Object.entries(repeated).map(([id,count])=>({id,count})) };
+}
+
+function FiguritasImporter({ myRepeats, myMissing, onImport }) {
+  const [text, setText] = useState("");
+  const [parsed, setParsed] = useState(null);
+  const [mode, setMode] = useState(null); // "compare" | "import"
+  const [err, setErr] = useState("");
+
+  const parse = () => {
+    if (!text.trim()) { setErr("Pega el texto de Figuritas App"); return; }
+    try {
+      const result = parseFiguritasApp(text);
+      if (result.missing.length === 0 && result.repeatList.length === 0) {
+        setErr("No se detectaron datos. Asegúrate de pegar el texto completo.");
+        return;
+      }
+      setParsed(result);
+      setErr("");
+    } catch(e) { setErr("Error al procesar el texto. Intenta de nuevo."); }
+  };
+
+  const compare = () => {
+    if (!parsed) return;
+    // What friend needs that I have repeated
+    const iGiveThem = myRepeats.filter(r=>parsed.missing.includes(r.id));
+    // What I need that friend has repeated
+    const theyGiveMe = parsed.repeatList.filter(r=>myMissing.includes(r.id));
+    return { iGiveThem, theyGiveMe };
+  };
+
+  const comparison = parsed && mode==="compare" ? compare() : null;
+
+  return (
+    <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:14,marginBottom:14}}>
+      <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0",marginBottom:4}}>📱 Importar desde otra app</div>
+      <div style={{fontSize:11,color:"#404058",marginBottom:10,lineHeight:1.6}}>
+        Pega el texto de otra app de álbum (con "Me faltan" y "Repetidas").
+      </div>
+
+      <textarea value={text} onChange={e=>{setText(e.target.value);setParsed(null);setMode(null);}}
+        placeholder={"Figuritas App - Lista\nUsa Méx Can 26\nMe faltan\nFWC 🏆: 2\nMEX 🇲🇽: 6, 11\n...\nRepetidas\nMEX 🇲🇽: 4, 5\n..."}
+        rows={6}
+        style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:8,
+          color:"#e0d8f0",fontSize:11,padding:"8px 10px",boxSizing:"border-box",
+          fontFamily:"monospace",outline:"none",resize:"none",marginBottom:8}}/>
+
+      {err && <div style={{fontSize:11,color:"#c05050",marginBottom:8}}>{err}</div>}
+
+      {!parsed ? (
+        <button onClick={parse}
+          style={{width:"100%",padding:"10px 0",background:"#0e0e28",border:"1px solid #4050a0",
+            borderRadius:10,color:"#8090d0",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600"}}>
+          🔍 Procesar texto
+        </button>
+      ) : (
+        <div>
+          <div style={{background:"#080810",borderRadius:8,padding:"8px 10px",marginBottom:10,fontSize:11,color:"#50d0a0"}}>
+            ✓ Detectado — Faltan: {parsed.missing.length} · Repetidas: {parsed.repeatList.length}
+          </div>
+
+          {/* Mode selector */}
+          <div style={{display:"flex",gap:6,marginBottom:10}}>
+            <button onClick={()=>setMode("compare")}
+              style={{flex:1,padding:"9px 0",background:mode==="compare"?"#0a1a28":"#0a0a14",
+                border:mode==="compare"?"1px solid #3a7080":"1px solid #1a1a28",
+                borderRadius:8,color:mode==="compare"?"#50c0d0":"#404058",cursor:"pointer",fontSize:11,fontFamily:BODY,fontWeight:"600"}}>
+              🔄 Comparar cambios
+            </button>
+            <button onClick={()=>setMode("import")}
+              style={{flex:1,padding:"9px 0",background:mode==="import"?"#1a0a08":"#0a0a14",
+                border:mode==="import"?"1px solid #804040":"1px solid #1a1a28",
+                borderRadius:8,color:mode==="import"?"#d07060":"#404058",cursor:"pointer",fontSize:11,fontFamily:BODY,fontWeight:"600"}}>
+              📥 Importar como mi álbum
+            </button>
+          </div>
+
+          {/* Compare result */}
+          {mode==="compare" && comparison && (
+            <div>
+              <div style={{marginBottom:8}}>
+                <div style={{fontSize:11,color:"#50d0a0",fontWeight:"600",marginBottom:4}}>
+                  ✅ Yo le doy ({comparison.iGiveThem.length} figuritas)
+                </div>
+                {comparison.iGiveThem.length===0
+                  ? <div style={{fontSize:11,color:"#303040"}}>Ninguna en común</div>
+                  : <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                      {comparison.iGiveThem.map(r=>(
+                        <div key={r.id} style={{padding:"3px 7px",borderRadius:12,background:"#0a1a10",
+                          border:"1px solid #2a5a38",color:"#50d0a0",fontSize:10,fontWeight:"700"}}>{r.id}</div>
+                      ))}
+                    </div>
+                }
+              </div>
+              <div style={{marginBottom:10}}>
+                <div style={{fontSize:11,color:"#d0a050",fontWeight:"600",marginBottom:4}}>
+                  🎁 Él/ella me da ({comparison.theyGiveMe.length} figuritas)
+                </div>
+                {comparison.theyGiveMe.length===0
+                  ? <div style={{fontSize:11,color:"#303040"}}>Ninguna en común</div>
+                  : <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                      {comparison.theyGiveMe.map(r=>(
+                        <div key={r.id} style={{padding:"3px 7px",borderRadius:12,background:"#1a1008",
+                          border:"1px solid #5a4020",color:"#d0a050",fontSize:10,fontWeight:"700"}}>{r.id}</div>
+                      ))}
+                    </div>
+                }
+              </div>
+              {(comparison.iGiveThem.length>0||comparison.theyGiveMe.length>0) && (
+                <button onClick={()=>{
+                  const txt = "🔄 Propuesta de intercambio Album WC2026\n"+
+                    (comparison.iGiveThem.length>0?"Yo te doy: "+comparison.iGiveThem.map(r=>r.id).join(", ")+"\n":"")+
+                    (comparison.theyGiveMe.length>0?"Tú me das: "+comparison.theyGiveMe.map(r=>r.id).join(", "):"");
+                  navigator.clipboard?.writeText(txt);
+                }} style={{width:"100%",padding:"9px 0",background:"#0a1a10",border:"1px solid #2a5a38",
+                  borderRadius:8,color:"#50d0a0",cursor:"pointer",fontSize:11,fontFamily:BODY,fontWeight:"600"}}>
+                  ⎘ Copiar propuesta para WhatsApp
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Import */}
+          {mode==="import" && (
+            <div style={{background:"#1a0808",border:"1px solid #5a2020",borderRadius:8,padding:10}}>
+              <div style={{fontSize:11,color:"#c05050",marginBottom:8,lineHeight:1.6}}>
+                ⚠️ Esto reemplazará TODO tu progreso actual con los datos de Figuritas App.
+              </div>
+              <button onClick={()=>{
+                if(window.confirm("¿Importar álbum desde Figuritas App?\nEsto reemplazará tu progreso actual.")) {
+                  onImport(parsed);
+                }
+              }} style={{width:"100%",padding:"9px 0",background:"#2a0808",border:"1px solid #8a3030",
+                borderRadius:8,color:"#e06060",cursor:"pointer",fontSize:11,fontFamily:BODY,fontWeight:"700"}}>
+                📥 Confirmar importación
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function QRMarket({ repeatList, missing }) {
   const [qrDataUrl, setQrDataUrl] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -2663,6 +2876,11 @@ function PaniniApp() {
 
             {/* ── MI QR DE CAMBIOS ── */}
             <QRMarket repeatList={repeatList} missing={missing} />
+
+            <FiguritasImporter myRepeats={repeatList} myMissing={missing}
+              onImport={(data)=>{ setOwned(new Set(data.owned)); setRepeated(data.repeated); }}/>
+
+            {/* Ver perfil */}
 
             {/* ── STATS ── */}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
