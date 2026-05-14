@@ -595,31 +595,29 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
       {open && <div className="accordion-content">
       {/* ── PAGE 1 ── */}
       <div style={{padding:"10px 10px 6px",borderBottom:`1px solid ${color}18`}}>
-        <div style={{fontSize:16,color:"#303048",letterSpacing:2,marginBottom:5}}>PÁG 1 · {code}</div>
-        {/* Row 1: info placeholder (50%) | carta 1 (25%) | carta 2 (25%) */}
-        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:5,marginBottom:5}}>
-          {/* Row 1: 1-2-3-4 */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-            {[1,2,3,4].map(n=>box(n))}
-          </div>
-          {/* Row 2: 5-6-7-8 */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-            {[5,6,7,8].map(n=>box(n))}
-          </div>
-          {/* Row 3: 9-10-11-12 */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-            {[9,10,11,12].map(n=>box(n))}
-          </div>
+        <div style={{fontSize:11,color:"#303048",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 1 · {code}</div>
+        {/* Row 1: 1-4 */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
+          {[1,2,3,4].map(n=>box(n))}
+        </div>
+        {/* Row 2: 5-8 */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
+          {[5,6,7,8].map(n=>box(n))}
+        </div>
+        {/* Row 3: 9-12 */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
+          {[9,10,11,12].map(n=>box(n))}
+        </div>
       </div>
 
       {/* ── PAGE 2 ── */}
       <div style={{padding:"6px 10px 10px"}}>
         <div style={{fontSize:11,color:"#252535",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 2</div>
-        {/* Row 1: 13-14-15-16 */}
+        {/* Row 1: 13-16 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
           {[13,14,15,16].map(n=>box(n))}
         </div>
-        {/* Row 2: 17-18-19-20 */}
+        {/* Row 2: 17-20 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
           {[17,18,19,20].map(n=>box(n))}
         </div>
