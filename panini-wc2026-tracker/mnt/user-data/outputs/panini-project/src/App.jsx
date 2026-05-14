@@ -381,10 +381,16 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
         borderTop:"1px solid "+(rep>0 ? "#6040b0" : has ? color+"33" : "#1a1a28"),
         gap:3, flexShrink:0}}
         onClick={e=>{ if(has){e.stopPropagation();onOpenRepeat(id);} }}>
-        <div style={{fontSize:idFs,fontWeight:"700",color:rep>0?"#c0a0ff":textC,letterSpacing:0.3,lineHeight:1}}>{id}</div>
-        {rep>0 && (
-          <div style={{fontSize:8,fontWeight:"900",color:"#c0a0ff",background:"#4a2090",
-            borderRadius:3,padding:"0 3px",lineHeight:"14px"}}>×{rep+1}</div>
+        {rep>0 ? (
+          <>
+            <div style={{fontSize:idFs,fontWeight:"700",color:"#c0a0ff",letterSpacing:0.3,lineHeight:1}}>{id}</div>
+            <div style={{fontSize:8,fontWeight:"900",color:"#c0a0ff",background:"#4a2090",
+              borderRadius:3,padding:"0 3px",lineHeight:"14px"}}>×{rep+1}</div>
+          </>
+        ) : has ? (
+          <div style={{fontSize:8,color:color+"99",letterSpacing:0.5,fontWeight:"600"}}>+ rep</div>
+        ) : (
+          <div style={{fontSize:idFs,fontWeight:"700",color:textC,letterSpacing:0.3,lineHeight:1}}>{id}</div>
         )}
       </div>
     </div>
@@ -592,96 +598,30 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
         <div style={{fontSize:16,color:"#303048",letterSpacing:2,marginBottom:5}}>PÁG 1 · {code}</div>
         {/* Row 1: info placeholder (50%) | carta 1 (25%) | carta 2 (25%) */}
         <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:5,marginBottom:5}}>
-          {/* Info tile — not selectable */}
-          <div style={{background:`linear-gradient(135deg,${color}28 0%,${color}10 60%,${color}05 100%)`,
-            border:"1.5px solid "+color+"40",borderRadius:8,
-            display:"flex",flexDirection:"column",alignItems:"flex-start",justifyContent:"space-between",
-            padding:"10px 12px",minHeight:90,boxSizing:"border-box",overflow:"hidden",position:"relative"}}>
-            {/* Big code watermark */}
-            <div style={{position:"absolute",right:-4,top:-6,fontSize:52,fontWeight:"400",
-              color:color+"18",letterSpacing:2,lineHeight:1,userSelect:"none",
-              fontFamily:DISPLAY}}>
-              {code}
-            </div>
-            {/* Top: group badge */}
-            <div style={{background:color+"22",border:"1px solid "+color+"44",borderRadius:4,
-              padding:"2px 7px",fontSize:11,color:color,fontWeight:"bold",letterSpacing:2,
-              textTransform:"uppercase",zIndex:1,fontFamily:BODY}}>
-              GRP {group}
-            </div>
-            {/* Main code */}
-            <div style={{fontSize:32,fontWeight:"400",color,lineHeight:1,letterSpacing:3,
-              fontFamily:DISPLAY,zIndex:1}}>
-              {code}
-            </div>
-            {/* Bottom: full name */}
-            <div style={{fontSize:10,color:color+"99",letterSpacing:0.5,
-              textTransform:"uppercase",zIndex:1,lineHeight:1.2,fontFamily:BODY}}>
-              {name}
-            </div>
+          {/* Row 1: 1-2-3-4 */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
+            {[1,2,3,4].map(n=>box(n))}
           </div>
-          {box(1,"lg")}
-          {box(2,"lg")}
-        </div>
-        {/* Row 2: 3-4-5-6 */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[3,4,5,6].map(n=>box(n))}
-        </div>
-        {/* Row 3: 7-8-9-10 */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-          {[7,8,9,10].map(n=>box(n))}
-        </div>
+          {/* Row 2: 5-6-7-8 */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
+            {[5,6,7,8].map(n=>box(n))}
+          </div>
+          {/* Row 3: 9-10-11-12 */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
+            {[9,10,11,12].map(n=>box(n))}
+          </div>
       </div>
 
       {/* ── PAGE 2 ── */}
       <div style={{padding:"6px 10px 10px"}}>
-        <div style={{fontSize:16,color:"#252535",letterSpacing:2,marginBottom:5}}>PÁG 2</div>
-        {/* Row 1: 11, 12 normal + 13 flag/badge wider */}
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:5,marginBottom:5}}>
-          {box(11)}{box(12)}
-          {(()=>{
-            const id13=s(13).id; const has13=owned.has(id13); const rep13=repeated[id13]||0;
-            return (
-              <div style={{background:has13?(rep13>0?"#2a1a6e":color+"22"):"#0d0d1a",
-                border:"1.5px solid "+(has13?(rep13>0?"#8060e0":color):"#252535"),
-                borderRadius:8,display:"flex",flexDirection:"column",alignItems:"center",
-                justifyContent:"center",minHeight:72,transition:"all 0.15s",
-                position:"relative",overflow:"hidden",userSelect:"none",WebkitUserSelect:"none"}}>
-                <div onClick={()=>onToggle(id13)}
-                  style={{flex:1,width:"100%",display:"flex",flexDirection:"column",
-                    alignItems:"center",justifyContent:"center",gap:2,cursor:"pointer",
-                    padding:has13?"4px 4px 20px":"4px"}}>
-                  <div style={{fontSize:18}}>{flag}</div>
-                  <div style={{fontSize:16,fontWeight:"900",color:has13?(rep13>0?"#c0a0ff":color):"#252535"}}>13</div>
-                  <div style={{fontSize:14,color:has13?color+"bb":"#252535"}}>{id13}</div>
-                  {rep13>0&&<div style={{background:"#1a0a40",border:"1px solid #6040b0",borderRadius:4,padding:"1px 4px",fontSize:16,color:"#c0a0ff",fontWeight:"bold"}}>{"\xd7"}{rep13+1}</div>}
-                </div>
-                {has13&&(
-                  <div onClick={e=>{e.stopPropagation();onOpenRepeat(id13);}}
-                    style={{position:"absolute",bottom:0,left:0,right:0,
-                      background:rep13>0?"#2a1060":color+"18",
-                      borderTop:"1px solid "+(rep13>0?"#6040b0":color+"33"),
-                      padding:"3px 0",textAlign:"center",cursor:"pointer",
-                      fontSize:14,color:rep13>0?"#c0a0ff":color+"99",fontWeight:"bold"}}>
-                    {rep13>0?("\u25c8 "+rep13+" extra"):"+\xa0rep"}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-        </div>
-        {/* Row 2: 14-15-16-17 */}
+        <div style={{fontSize:11,color:"#252535",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 2</div>
+        {/* Row 1: 13-14-15-16 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[14,15,16,17].map(n=>box(n,"md"))}
+          {[13,14,15,16].map(n=>box(n))}
         </div>
-        {/* Row 3: group tile + 18-19-20 */}
+        {/* Row 2: 17-18-19-20 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-          <div style={{background:color+"08",border:"1px dashed "+color+"22",borderRadius:8,
-            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",minHeight:56}}>
-            <div style={{fontSize:14,color:color+"66",fontWeight:"bold",letterSpacing:1}}>GRP</div>
-            <div style={{fontSize:16,fontWeight:"900",color:color+"66"}}>{group}</div>
-          </div>
-          {[18,19,20].map(n=>box(n,"sm"))}
+          {[17,18,19,20].map(n=>box(n))}
         </div>
       </div>
 
