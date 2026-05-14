@@ -2091,7 +2091,7 @@ function PaniniApp() {
                     try {
                       const data=JSON.parse(ev.target.result);
                       if(!data.owned||!data.repeated) throw new Error();
-                      if(window.confirm(`¿Importar? (${data.owned.length} figuritas)\nEsto reemplazará tu progreso actual.`)){
+                      if(window.confirm("¿Importar? ("+data.owned.length+" figuritas)\nEsto reemplazará tu progreso actual.")){
                         setOwned(new Set(data.owned)); setRepeated(data.repeated);
                       }
                     } catch { alert("Archivo inválido."); }
@@ -2256,7 +2256,7 @@ function PaniniApp() {
                   );
                 })}
 
-                <button onClick={()=>navigator.clipboard?.writeText(`Mis repetidas Album WC2026:\n${repeatList.map(r=>`${r.id} ×${r.count}`).join("  |  ")}`)}
+                <button onClick={()=>navigator.clipboard?.writeText("Mis repetidas Album WC2026:\n"+repeatList.map(r=>r.id+" ×"+r.count).join("  |  "))}
                   style={{width:"100%",marginTop:4,padding:"11px 0",background:"#0e0e28",border:"1px solid #303080",borderRadius:10,color:"#6070c0",cursor:"pointer",fontSize:13,fontFamily:BODY}}>
                   ⎘ Copiar lista para WhatsApp
                 </button>
@@ -2275,7 +2275,7 @@ function PaniniApp() {
                 <div style={{fontSize:11,color:"#505060",textTransform:"uppercase",letterSpacing:1,marginTop:4}}>Faltantes</div>
               </div>
               <div style={{background:"#0e0e1a",border:"1px solid #1a2a3a",borderRadius:12,padding:14,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center",gap:6}}>
-                <button onClick={()=>{ const lines=Object.entries(missingByTeam).map(([c,ids])=>`${c}: ${ids.map(id=>id.replace(c,"")).join(" ")}`).join("\n"); navigator.clipboard?.writeText(`Faltan ${missing.length}:\n\n${lines}`); setShareMsg(true); setTimeout(()=>setShareMsg(false),2500); }}
+                <button onClick={()=>{ const lines=Object.entries(missingByTeam).map(([c,ids])=>c+": "+ids.map(id=>id.replace(c,"")).join(" ")).join("\n"); navigator.clipboard?.writeText("Faltan "+missing.length+":\n\n"+lines); setShareMsg(true); setTimeout(()=>setShareMsg(false),2500); }}
                   style={{padding:"7px 0",background:"#0e0e28",border:"1px solid #303080",borderRadius:8,color:shareMsg?"#50d0a0":"#6070c0",cursor:"pointer",fontSize:12,fontFamily:BODY,fontWeight:"600"}}>
                   {shareMsg?"✓ Copiado":"⎘ Copiar lista"}
                 </button>
@@ -2635,7 +2635,7 @@ function PaniniApp() {
                       try {
                         const data = JSON.parse(ev.target.result);
                         if (!data.owned || !data.repeated) throw new Error("Formato inválido");
-                        if (window.confirm(`¿Importar este álbum? (${data.owned.length} figuritas)\nEsto reemplazará tu progreso actual.`)) {
+                        if (window.confirm("¿Importar este álbum? ("+data.owned.length+" figuritas)\nEsto reemplazará tu progreso actual.")) {
                           setOwned(new Set(data.owned));
                           setRepeated(data.repeated);
                         }
