@@ -598,18 +598,14 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
         <div style={{fontSize:11,color:"#303048",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 1 · {code}</div>
         {/* Row 1: info tile (2fr) | carta 1 | carta 2 */}
         <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:5,marginBottom:5}}>
-          {/* Info tile — compact, no redundancy */}
           <div style={{background:"linear-gradient(135deg,"+color+"22,"+color+"08)",
             border:"1.5px solid "+color+"40",borderRadius:8,
             display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
             padding:"8px",minHeight:64,boxSizing:"border-box",overflow:"hidden",position:"relative"}}>
             <div style={{position:"absolute",right:-4,top:-4,fontSize:44,fontWeight:"400",
-              color:color+"15",letterSpacing:2,lineHeight:1,userSelect:"none",fontFamily:DISPLAY}}>
-              {code}
-            </div>
+              color:color+"15",letterSpacing:2,lineHeight:1,userSelect:"none",fontFamily:DISPLAY}}>{code}</div>
             <div style={{fontSize:26,lineHeight:1,marginBottom:4,zIndex:1}}>{flag}</div>
-            <div style={{fontSize:18,fontWeight:"400",color,lineHeight:1,letterSpacing:2,
-              fontFamily:DISPLAY,zIndex:1}}>{code}</div>
+            <div style={{fontSize:18,fontWeight:"400",color,lineHeight:1,letterSpacing:2,fontFamily:DISPLAY,zIndex:1}}>{code}</div>
           </div>
           {box(1)}{box(2)}
         </div>
@@ -626,19 +622,51 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
       {/* ── PAGE 2 ── */}
       <div style={{padding:"6px 10px 10px"}}>
         <div style={{fontSize:11,color:"#252535",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 2</div>
-        {/* Row 1: 11-12 + carta 13 (same size as others) */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[11,12,13,14].map(n=>box(n))}
+        {/* Row 1: 11, 12 (1fr 1fr) + carta 13 especial (2fr) */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:5,marginBottom:5}}>
+          {box(11)}{box(12)}
+          {(()=>{
+            const id13=s(13).id; const has13=owned.has(id13); const rep13=repeated[id13]||0;
+            const bg13  = has13?(rep13>0?"#2a1a6e":color+"22"):"#0d0d1a";
+            const bc13  = has13?(rep13>0?"#8060e0":color):"#252535";
+            const tc13  = has13?(rep13>0?"#c0a0ff":color):"#35354a";
+            return (
+              <div style={{background:bg13,border:"1.5px solid "+bc13,borderRadius:8,
+                display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",
+                height:64,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",cursor:"pointer"}}
+                onClick={()=>onToggle(id13)}>
+                <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3}}>
+                  <div style={{fontSize:18}}>{flag}</div>
+                  <div style={{fontSize:15,fontWeight:"900",color:tc13,lineHeight:1}}>13</div>
+                </div>
+                <div style={{width:"100%",height:20,display:"flex",alignItems:"center",justifyContent:"center",
+                  background:rep13>0?"#2a1060":has13?color+"18":"#0a0a14",
+                  borderTop:"1px solid "+(rep13>0?"#6040b0":has13?color+"33":"#1a1a28"),gap:3}}
+                  onClick={e=>{if(has13){e.stopPropagation();onOpenRepeat(id13);}}}>
+                  {rep13>0
+                    ? <><div style={{fontSize:9,fontWeight:"700",color:"#c0a0ff"}}>{id13}</div>
+                        <div style={{fontSize:8,fontWeight:"900",color:"#c0a0ff",background:"#4a2090",borderRadius:3,padding:"0 3px",lineHeight:"14px"}}>×{rep13+1}</div></>
+                    : has13
+                      ? <div style={{fontSize:8,color:color+"99",fontWeight:"600"}}>+ rep</div>
+                      : <div style={{fontSize:9,fontWeight:"700",color:tc13}}>{id13}</div>
+                  }
+                </div>
+              </div>
+            );
+          })()}
         </div>
-        {/* Row 2: 15-16-17-18 */}
+        {/* Row 2: 14-15-16-17 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[15,16,17,18].map(n=>box(n))}
+          {[14,15,16,17].map(n=>box(n))}
         </div>
-        {/* Row 3: 19-20 (centered) */}
+        {/* Row 3: GRP tile + 18-19-20 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-          {box(19)}{box(20)}
-          <div/>
-          <div/>
+          <div style={{background:color+"08",border:"1px dashed "+color+"22",borderRadius:8,
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:64}}>
+            <div style={{fontSize:11,color:color+"55",fontWeight:"700",letterSpacing:1,fontFamily:DISPLAY}}>GRP</div>
+            <div style={{fontSize:20,fontWeight:"900",color:color+"55",fontFamily:DISPLAY}}>{group}</div>
+          </div>
+          {[18,19,20].map(n=>box(n))}
         </div>
       </div>
 
