@@ -2512,6 +2512,9 @@ function PaniniApp() {
             <ShareCard owned={owned} missing={missing} repeatList={repeatList} pct={pct} totalOwned={owned.size}/>
 
             {/* Progreso por sección */}
+            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
+              <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
+                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por sección</div>
               </div>
               <div style={{padding:"8px 16px 12px"}}>
                 {[{key:"FWCI",label:"FWC · Intro",flag:"🌍"},{key:"FWCH",label:"FWC · Historia",flag:"🏆"}].map(({key,label,flag})=>{
@@ -2590,10 +2593,7 @@ function PaniniApp() {
               </div>
             </div>
 
-            {/* Progreso por sección */}
-            <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,overflow:"hidden",marginBottom:14}}>
-              <div style={{padding:"12px 16px",borderBottom:"1px solid #1a1a28"}}>
-                <div style={{fontSize:13,fontWeight:"700",color:"#e0d8f0"}}>Progreso por sección</div>
+            {/* Export / Import */}
             <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:16,marginBottom:14}}>
               <div style={{fontSize:13,fontWeight:"700",marginBottom:4}}>Mis datos</div>
               <div style={{fontSize:12,color:"#505068",marginBottom:12,lineHeight:1.6}}>
