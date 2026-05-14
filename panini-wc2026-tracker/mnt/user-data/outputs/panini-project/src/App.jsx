@@ -388,7 +388,7 @@ function StickerBox({ id, num, color, size, owned, repeated, onToggle, onOpenRep
               borderRadius:3,padding:"0 3px",lineHeight:"14px"}}>×{rep+1}</div>
           </>
         ) : has ? (
-          <div style={{fontSize:8,color:color+"99",letterSpacing:0.5,fontWeight:"600"}}>+ rep</div>
+          <div style={{fontSize:8,color:color+"99",letterSpacing:0.5,fontWeight:"600"}}>+ REP</div>
         ) : (
           <div style={{fontSize:idFs,fontWeight:"700",color:textC,letterSpacing:0.3,lineHeight:1}}>{id}</div>
         )}
@@ -647,7 +647,7 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
                     ? <><div style={{fontSize:9,fontWeight:"700",color:"#c0a0ff"}}>{id13}</div>
                         <div style={{fontSize:8,fontWeight:"900",color:"#c0a0ff",background:"#4a2090",borderRadius:3,padding:"0 3px",lineHeight:"14px"}}>×{rep13+1}</div></>
                     : has13
-                      ? <div style={{fontSize:8,color:color+"99",fontWeight:"600"}}>+ rep</div>
+                      ? <div style={{fontSize:8,color:color+"99",fontWeight:"600"}}>+ REP</div>
                       : <div style={{fontSize:9,fontWeight:"700",color:tc13}}>{id13}</div>
                   }
                 </div>
