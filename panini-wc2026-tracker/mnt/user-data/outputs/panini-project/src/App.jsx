@@ -635,8 +635,8 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
                 display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",
                 height:64,overflow:"hidden",userSelect:"none",WebkitUserSelect:"none",cursor:"pointer"}}
                 onClick={()=>onToggle(id13)}>
-                <div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3}}>
-                  <div style={{fontSize:18}}>{flag}</div>
+                <div style={{flex:1,display:"flex",flexDirection:"row",alignItems:"center",justifyContent:"center",gap:4}}>
+                  <div style={{fontSize:16}}>{flag}</div>
                   <div style={{fontSize:15,fontWeight:"900",color:tc13,lineHeight:1}}>13</div>
                 </div>
                 <div style={{width:"100%",height:20,display:"flex",alignItems:"center",justifyContent:"center",
