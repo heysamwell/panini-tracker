@@ -1316,7 +1316,7 @@ function FiguritasImporter({ myRepeats, myMissing, onImport }) {
       </div>
 
       <textarea value={text} onChange={e=>{setText(e.target.value);setParsed(null);setMode(null);}}
-        placeholder={"Figuritas App - Lista\nUsa Méx Can 26\nMe faltan\nFWC 🏆: 2\nMEX 🇲🇽: 6, 11\n...\nRepetidas\nMEX 🇲🇽: 4, 5\n..."}
+        placeholder={"Me faltan\nFWC 🏆: 2\nMEX 🇲🇽: 6, 11\n...\nRepetidas\nMEX 🇲🇽: 4, 5\n..."}
         rows={6}
         style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:8,
           color:"#e0d8f0",fontSize:11,padding:"8px 10px",boxSizing:"border-box",
