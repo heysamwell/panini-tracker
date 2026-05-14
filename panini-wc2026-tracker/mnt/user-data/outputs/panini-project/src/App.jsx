@@ -596,30 +596,49 @@ function TeamSpread({ section, owned, repeated, expandAll, onToggle, onOpenRepea
       {/* ── PAGE 1 ── */}
       <div style={{padding:"10px 10px 6px",borderBottom:`1px solid ${color}18`}}>
         <div style={{fontSize:11,color:"#303048",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 1 · {code}</div>
-        {/* Row 1: 1-4 */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[1,2,3,4].map(n=>box(n))}
+        {/* Row 1: info tile (2fr) | carta 1 | carta 2 */}
+        <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr",gap:5,marginBottom:5}}>
+          {/* Info tile — compact, no redundancy */}
+          <div style={{background:"linear-gradient(135deg,"+color+"22,"+color+"08)",
+            border:"1.5px solid "+color+"40",borderRadius:8,
+            display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",
+            padding:"8px",minHeight:64,boxSizing:"border-box",overflow:"hidden",position:"relative"}}>
+            <div style={{position:"absolute",right:-4,top:-4,fontSize:44,fontWeight:"400",
+              color:color+"15",letterSpacing:2,lineHeight:1,userSelect:"none",fontFamily:DISPLAY}}>
+              {code}
+            </div>
+            <div style={{fontSize:26,lineHeight:1,marginBottom:4,zIndex:1}}>{flag}</div>
+            <div style={{fontSize:18,fontWeight:"400",color,lineHeight:1,letterSpacing:2,
+              fontFamily:DISPLAY,zIndex:1}}>{code}</div>
+          </div>
+          {box(1)}{box(2)}
         </div>
-        {/* Row 2: 5-8 */}
+        {/* Row 2: 3-4-5-6 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[5,6,7,8].map(n=>box(n))}
+          {[3,4,5,6].map(n=>box(n))}
         </div>
-        {/* Row 3: 9-12 */}
+        {/* Row 3: 7-8-9-10 */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-          {[9,10,11,12].map(n=>box(n))}
+          {[7,8,9,10].map(n=>box(n))}
         </div>
       </div>
 
       {/* ── PAGE 2 ── */}
       <div style={{padding:"6px 10px 10px"}}>
         <div style={{fontSize:11,color:"#252535",letterSpacing:2,marginBottom:5,textTransform:"uppercase"}}>PÁG 2</div>
-        {/* Row 1: 13-16 */}
+        {/* Row 1: 11-12 + carta 13 (same size as others) */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
-          {[13,14,15,16].map(n=>box(n))}
+          {[11,12,13,14].map(n=>box(n))}
         </div>
-        {/* Row 2: 17-20 */}
+        {/* Row 2: 15-16-17-18 */}
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:5}}>
+          {[15,16,17,18].map(n=>box(n))}
+        </div>
+        {/* Row 3: 19-20 (centered) */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
-          {[17,18,19,20].map(n=>box(n))}
+          {box(19)}{box(20)}
+          <div/>
+          <div/>
         </div>
       </div>
 
