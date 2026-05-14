@@ -2623,7 +2623,14 @@ function PaniniApp() {
             {(()=>{
               const totalCopies = Object.values(repeated).reduce((a,v)=>a+v,0);
               const totalStickers = owned.size + totalCopies;
-              const ratio = totalStickers > 0 ? owned.size / totalStickers : 1;
+              const ratio = totalStickers > 0 ? owned.size / totalStickers : 0;
+              if (owned.size === 0) return (
+                <div style={{background:"#0e0e1a",border:"1px solid #1e1e30",borderRadius:14,padding:18,marginBottom:14,textAlign:"center"}}>
+                  <div style={{fontSize:13,color:"#606078",letterSpacing:2,textTransform:"uppercase",marginBottom:12,fontWeight:"600"}}>🎲 Nivel de suerte</div>
+                  <div style={{fontSize:32,marginBottom:8}}>🎴</div>
+                  <div style={{fontSize:13,color:"#404058"}}>Marca tus primeras figuritas para calcular tu nivel de suerte</div>
+                </div>
+              );
 
               const RARE = [
                 {id:"FWC0",  emoji:"⭐", note:"La legendaria"},
