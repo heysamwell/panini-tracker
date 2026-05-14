@@ -1225,57 +1225,71 @@ const FLAG_TO_CODE = {
 };
 
 function parseFiguritasApp(text) {
-  const owned = [];
-  const repeated = {};
   const missing = [];
-  let section = null; // "missing" | "repeated"
+  const repeated = {};
+  let section = null;
 
   const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
 
+  // Map flag emoji to team code
+  const getCode = (line) => {
+    for (const [flag, code] of Object.entries(FLAG_TO_CODE)) {
+      if (line.includes(flag)) return { code, flag };
+    }
+    return null;
+  };
+
   for (const line of lines) {
     const lw = line.toLowerCase();
-    if (lw.includes("me faltan") || lw.includes("i need") || lw.includes("necesito")) { section="missing"; continue; }
-    if (lw.includes("repetidas") || lw.includes("swaps") || lw.includes("cambios") || lw.includes("me sobran")) { section="repeated"; continue; }
-    if (lw.startsWith("descarga") || lw.startsWith("download") || lw.startsWith("http")) continue;
-    if (lw.includes("figuritas app") || lw.includes("usa ")) continue;
+    // Section detection
+    if (lw.includes("me faltan") || lw.includes("i need") || lw.includes("necesito") || lw === "me faltan") { section="missing"; continue; }
+    if (lw.includes("repetidas") || lw.includes("swaps") || lw.includes("me sobran") || lw === "repetidas") { section="repeated"; continue; }
+    if (!section) continue;
+    if (lw.startsWith("descarga") || lw.startsWith("download") || lw.startsWith("http") || lw.includes("figuritas app") || lw.startsWith("usa ")) continue;
 
-    // Match: "MEX 🇲🇽: 1, 2, 3" or "FWC 🏆: 2" or "CC 🥤: 10"
-    const match = line.match(/^([A-Z]+\s*)?(\p{Emoji_Presentation}|\p{Extended_Pictographic})\s*[:\-]\s*([\d,\s]+)/u);
+    const match = getCode(line);
     if (!match) continue;
 
-    const flagChar = match[2];
-    const numsStr = match[3];
-    const nums = numsStr.split(",").map(n=>n.trim()).filter(Boolean).map(Number).filter(n=>!isNaN(n));
+    const { code, flag } = match;
 
-    // Resolve code from flag
-    let code = FLAG_TO_CODE[flagChar];
-    if (!code) continue;
+    // Extract numbers after the colon
+    const colonIdx = line.indexOf(":");
+    if (colonIdx === -1) continue;
+    const numsStr = line.slice(colonIdx+1);
+    const nums = numsStr.split(",").map(n=>parseInt(n.trim())).filter(n=>!isNaN(n) && n > 0);
+    if (nums.length === 0) continue;
 
-    // FWC special: map to FWC0-FWC8 (FWCI) or FWC9-FWC19 (FWCH)
-    const isFWCI = code === "FWCI";
-    const isFWCH = code === "FWCH";
+    const isFWCI = code === "FWCI"; // 🌎 = Intro FWC0-FWC8
+    const isFWCH = code === "FWCH"; // 🏆 or 📜 = Historia FWC9-FWC19
 
     for (const num of nums) {
       let id;
-      if (isFWCI) id = "FWC"+num;
-      else if (isFWCH) id = "FWC"+(num < 9 ? num+9 : num); // offset Historia
-      else id = code+num;
+      if (isFWCI) {
+        id = "FWC"+num; // direct: FWC1-FWC8
+      } else if (isFWCH) {
+        // Historia numbers in Figuritas are 1-11 mapping to FWC9-FWC19
+        id = "FWC"+(num + 8);
+      } else {
+        id = code+num;
+      }
 
       if (!ALL_IDS.includes(id)) continue;
 
       if (section === "missing") {
-        missing.push(id);
+        if (!missing.includes(id)) missing.push(id);
       } else if (section === "repeated") {
-        repeated[id] = (repeated[id]||0)+1;
-        if (!owned.includes(id)) owned.push(id);
+        repeated[id] = (repeated[id]||0) + 1;
       }
     }
   }
 
-  // owned = everything NOT in missing (rough approximation)
-  const allOwned = ALL_IDS.filter(id=>!missing.includes(id));
+  // owned = all stickers that are NOT missing and NOT repeated
+  // repeated ones are also owned
+  const repeatIds = Object.keys(repeated);
+  const owned = ALL_IDS.filter(id => !missing.includes(id));
+  const repeatList = Object.entries(repeated).map(([id,count])=>({id,count}));
 
-  return { owned: allOwned, repeated, missing, repeatList: Object.entries(repeated).map(([id,count])=>({id,count})) };
+  return { owned, repeated, missing, repeatList };
 }
 
 function FiguritasImporter({ myRepeats, myMissing, onImport }) {
