@@ -940,13 +940,18 @@ function TradeConfirm({ result, accentColor, onConfirm }) {
 function QuickEntryModal({ onClose, onMark, allIds }) {
   const [input, setInput] = useState("");
   const [result, setResult] = useState(null);
+  const [mode, setMode] = useState("tengo");
 
   const parse = () => {
     const tokens = input.toUpperCase().split(/[\s,;]+/).filter(Boolean);
     const valid = tokens.filter(t=>allIds.includes(t));
-    const invalid = tokens.filter(t=>!allIds.includes(t));
+    const invalid = tokens.filter(t=>t.length>1 && !allIds.includes(t));
     setResult({valid, invalid});
   };
+
+  const modeColor = mode==="tengo" ? "#50d0a0" : "#f97316";
+  const modeBg    = mode==="tengo" ? "#0a1a10"  : "#1a0e08";
+  const modeBorder= mode==="tengo" ? "#2a5a38"  : "#5a3010";
 
   return (
     <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:200,
@@ -955,8 +960,7 @@ function QuickEntryModal({ onClose, onMark, allIds }) {
       <div style={{background:"#0a0a14",border:"1px solid #2a2a50",borderRadius:16,
         width:"100%",maxWidth:460,margin:"20px 12px",padding:20,fontFamily:BODY}}>
 
-        {/* Header */}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
           <div>
             <div style={{fontSize:13,letterSpacing:3,color:"#e8c84a",textTransform:"uppercase"}}>Entrada rápida</div>
             <div style={{fontSize:16,fontWeight:"700"}}>Marcar varias a la vez</div>
@@ -964,13 +968,34 @@ function QuickEntryModal({ onClose, onMark, allIds }) {
           <button onClick={onClose} style={{background:"none",border:"none",color:"#505060",fontSize:20,cursor:"pointer"}}>✕</button>
         </div>
 
-        <div style={{fontSize:12,color:"#404058",marginBottom:12,padding:"8px 10px",background:"#080810",borderRadius:8,lineHeight:1.7}}>
-          Escribe los códigos separados por espacio o coma.<br/>
-          <span style={{color:"#e8c84a80"}}>Ej: MEX7 BRA14 FWC3 ESP15, CC1</span>
+        {/* Mode toggle */}
+        <div style={{display:"flex",gap:6,marginBottom:14,background:"#080810",borderRadius:10,padding:4}}>
+          <button onClick={()=>{setMode("tengo");setResult(null);}}
+            style={{flex:1,padding:"9px 0",borderRadius:8,border:"none",cursor:"pointer",
+              fontSize:12,fontFamily:BODY,fontWeight:"600",
+              background:mode==="tengo"?"#0a1a10":"transparent",
+              color:mode==="tengo"?"#50d0a0":"#404058"}}>
+            ✅ Tengo estas
+          </button>
+          <button onClick={()=>{setMode("faltan");setResult(null);}}
+            style={{flex:1,padding:"9px 0",borderRadius:8,border:"none",cursor:"pointer",
+              fontSize:12,fontFamily:BODY,fontWeight:"600",
+              background:mode==="faltan"?"#1a0e08":"transparent",
+              color:mode==="faltan"?"#f97316":"#404058"}}>
+            ❌ Me faltan estas
+          </button>
         </div>
 
-        <textarea value={input} onChange={e=>setInput(e.target.value)}
-          placeholder="MEX7 BRA14 FWC3..."
+        <div style={{fontSize:12,color:"#404058",marginBottom:12,padding:"8px 10px",
+          background:modeBg,border:"1px solid "+modeBorder,borderRadius:8,lineHeight:1.7}}>
+          {mode==="tengo"
+            ? <>Escribe los que <strong style={{color:"#50d0a0"}}>tienes</strong> — se marcarán como poseídas.<br/><span style={{color:"#e8c84a80"}}>Ej: MEX7 BRA14 FWC3 CC1</span></>
+            : <>Escribe los que <strong style={{color:"#f97316"}}>te faltan</strong> — todo lo demás se marca como poseído.<br/><span style={{color:"#e8c84a80"}}>Ideal si ya tienes el 80%+ del álbum.</span></>
+          }
+        </div>
+
+        <textarea value={input} onChange={e=>{setInput(e.target.value);setResult(null);}}
+          placeholder={mode==="tengo" ? "MEX7 BRA14 FWC3..." : "MEX2 CZE4 BRA18..."}
           rows={4}
           style={{width:"100%",background:"#080810",border:"1px solid #2a2a40",borderRadius:10,
             color:"#e0d8f0",fontSize:14,padding:"10px 12px",boxSizing:"border-box",
@@ -978,26 +1003,33 @@ function QuickEntryModal({ onClose, onMark, allIds }) {
 
         {result && (
           <div style={{marginBottom:12}}>
-            {result.valid.length>0 && (
+            {mode==="tengo" ? (
+              result.valid.length>0 && (
+                <div style={{marginBottom:8}}>
+                  <div style={{fontSize:12,color:"#50d0a0",marginBottom:6,fontWeight:"600"}}>✓ {result.valid.length} figuritas válidas</div>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                    {result.valid.map(id=>(
+                      <div key={id} style={{padding:"3px 8px",borderRadius:12,background:"#0a1a10",
+                        border:"1px solid #2a5a38",color:"#50d0a0",fontSize:11,fontWeight:"700"}}>{id}</div>
+                    ))}
+                  </div>
+                </div>
+              )
+            ) : (
               <div style={{marginBottom:8}}>
-                <div style={{fontSize:12,color:"#50d0a0",marginBottom:6,fontWeight:"600"}}>
-                  ✓ {result.valid.length} figuritas válidas
+                <div style={{fontSize:12,color:"#f97316",marginBottom:4,fontWeight:"600"}}>
+                  ❌ {result.valid.length} te faltan → se marcarán {allIds.length - result.valid.length} como poseídas
                 </div>
                 <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                  {result.valid.map(id=>{
-                    const sec = allIds.includes(id) ? id : null;
-                    return (
-                      <div key={id} style={{padding:"3px 8px",borderRadius:12,background:"#0a1a10",
-                        border:"1px solid #2a5a38",color:"#50d0a0",fontSize:11,fontWeight:"700"}}>
-                        {id}
-                      </div>
-                    );
-                  })}
+                  {result.valid.map(id=>(
+                    <div key={id} style={{padding:"3px 8px",borderRadius:12,background:"#1a0e08",
+                      border:"1px solid #5a3010",color:"#f97316",fontSize:11,fontWeight:"700"}}>{id}</div>
+                  ))}
                 </div>
               </div>
             )}
             {result.invalid.length>0 && (
-              <div style={{fontSize:12,color:"#c05050"}}>
+              <div style={{fontSize:11,color:"#c05050",marginTop:4}}>
                 ✗ No reconocidos: {result.invalid.join(", ")}
               </div>
             )}
@@ -1010,11 +1042,20 @@ function QuickEntryModal({ onClose, onMark, allIds }) {
               borderRadius:10,color:"#8090d0",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"600"}}>
             🔍 Verificar
           </button>
-          {result?.valid?.length>0 && (
-            <button onClick={()=>{onMark(result.valid);onClose();}}
-              style={{flex:1,padding:"11px 0",background:"#0a180a",border:"1px solid #40a040",
-                borderRadius:10,color:"#60b060",cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"700"}}>
-              ✓ Marcar {result.valid.length}
+          {result && (result.valid.length>0 || mode==="faltan") && (
+            <button onClick={()=>{
+              if (mode==="tengo") {
+                onMark(result.valid);
+              } else {
+                onMark(allIds.filter(id=>!result.valid.includes(id)));
+              }
+              onClose();
+            }}
+              style={{flex:1,padding:"11px 0",background:modeBg,border:"1px solid "+modeBorder,
+                borderRadius:10,color:modeColor,cursor:"pointer",fontSize:13,fontFamily:BODY,fontWeight:"700"}}>
+              {mode==="tengo"
+                ? "✓ Marcar "+result.valid.length
+                : "✓ Marcar "+(allIds.length-result.valid.length)+" poseídas"}
             </button>
           )}
         </div>
